@@ -3,37 +3,51 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Control de Gastos</title>
+  <title>Control de Grupo</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>💰 Gastos del Grupo</h1>
+<h1>💰 Control del Grupo</h1>
 
 <div class="card">
-  <h2>Agregar Persona</h2>
+  <h2>👤 Personas</h2>
   <input type="text" id="personName" placeholder="Nombre">
-  <button onclick="addPerson()">Agregar</button>
+  <button onclick="addPerson()">Agregar Persona</button>
+  <ul id="peopleList"></ul>
 </div>
 
-<div class="card">
-  <h2>Registrar Movimiento</h2>
+<div class="grid">
 
-  <select id="personSelect"></select>
+  <div class="card">
+    <h2>💵 Ingresos / Aportes</h2>
 
-  <input type="number" id="amount" placeholder="Monto">
+    <select id="incomePerson"></select>
+    <input type="number" id="incomeAmount" placeholder="Monto">
 
-  <select id="type">
-    <option value="deposit">Aporte</option>
-    <option value="expense">Gasto</option>
-  </select>
+    <button onclick="addTransaction('income')">Agregar Ingreso</button>
 
-  <button onclick="addTransaction()">Guardar</button>
+    <div id="incomeList"></div>
+    <h3>Total Ingresos: <span id="totalIncome">0</span></h3>
+  </div>
+
+  <div class="card">
+    <h2>🧾 Gastos</h2>
+
+    <select id="expensePerson"></select>
+    <input type="number" id="expenseAmount" placeholder="Monto">
+
+    <button onclick="addTransaction('expense')">Agregar Gasto</button>
+
+    <div id="expenseList"></div>
+    <h3>Total Gastos: <span id="totalExpense">0</span></h3>
+  </div>
+
 </div>
 
-<div class="card">
-  <h2>Resumen</h2>
-  <div id="summary"></div>
+<div class="card total">
+  <h2>📊 Balance General</h2>
+  <h3 id="balance">0</h3>
 </div>
 
 <script src="script.js"></script>
