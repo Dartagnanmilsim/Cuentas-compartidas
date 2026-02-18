@@ -5,7 +5,8 @@ import {
   setDoc,
   onSnapshot,
   collection,
-  getDocs
+  getDocs,
+  deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -94,16 +95,12 @@ function isAdmin() {
 window.createProject = async function () {
 
   if (!isAdmin()) {
-    alert("Solo el administrador puede crear proyectos");
+    alert("Solo admin");
     return;
   }
 
   const name = document.getElementById("newProject").value.trim();
-
-  if (!name) {
-    alert("Escribe un nombre");
-    return;
-  }
+  if (!name) return;
 
   currentProject = name;
 
@@ -117,6 +114,31 @@ window.createProject = async function () {
   document.getElementById("projectSelect").value = name;
 
   connectProject();
+};
+
+window.deleteProject = async function () {
+
+  if (!isAdmin()) {
+    alert("Solo admin");
+    return;
+  }
+
+  if (!currentProject) {
+    alert("Selecciona proyecto");
+    return;
+  }
+
+  if (!confirm("¿Eliminar proyecto?")) return;
+
+  await deleteDoc(doc(db, "budgets", currentProject));
+
+  currentProject = null;
+
+  if (unsubscribe) unsubscribe();
+
+  await loadProjects();
+
+  clearUI();
 };
 
 document.getElementById("projectSelect").addEventListener("change", (e) => {
@@ -186,6 +208,17 @@ function formatMoney(n) {
   });
 }
 
+function clearUI() {
+
+  document.getElementById("peopleList").innerHTML = "";
+  document.getElementById("incomeList").innerHTML = "";
+  document.getElementById("expenseList").innerHTML = "";
+
+  document.getElementById("totalIncome").textContent = "0";
+  document.getElementById("totalExpense").textContent = "0";
+  document.getElementById("balance").textContent = "$0";
+}
+
 function updateUI() {
 
   if (!currentProject) return;
@@ -201,8 +234,8 @@ function updateUI() {
   data.people.forEach((p, i) => {
 
     peopleList.innerHTML += `
-      <li>
-        🤙 ${p}
+      <li class="people-item">
+        <div class="people-name">🤙 ${p}</div>
         ${isAdmin()
           ? `<button class="btn-delete" onclick="deletePerson(${i})">✖</button>`
           : ""
