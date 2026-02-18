@@ -1,267 +1,390 @@
 let admin = false;
-let proyectoActual = null;
 
-const colores = ["color1","color2","color3","color4","color5"];
+const ADMIN_PASS = "1234";
 
-function formato(n){
-  return "$ " + Number(n).toLocaleString("es-CO");
-}
+const colores = ["#e74c3c","#3498db","#27ae60","#9b59b6","#f39c12","#16a085"];
+
 
 function loginAdmin(){
-  const pass = document.getElementById("adminPass").value;
-  if(pass === "1234"){
-    admin = true;
-    document.getElementById("modoAdmin").innerText = "Modo 👑 Admin";
-  }else{
-    alert("Clave incorrecta");
-  }
+    const pass = document.getElementById("adminPass").value;
+
+    if(pass === ADMIN_PASS){
+        admin = true;
+        document.getElementById("modoAdmin").innerText = "Modo 👑 Admin";
+        alert("Modo administrador activado");
+    }else{
+        alert("Clave incorrecta");
+    }
 }
 
-async function crearProyecto(){
-  const nombre = document.getElementById("nuevoProyecto").value;
-  if(!nombre) return;
 
-  await fb.addDoc(fb.collection(db,"proyectos"),{nombre});
-  cargarProyectos();
+
+function formatoPesos(num){
+    return "$ " + Number(num || 0).toLocaleString("es-CO");
 }
 
-async function cargarProyectos(){
-  const snap = await fb.getDocs(fb.collection(db,"proyectos"));
-  const select = document.getElementById("proyectoSelect");
-  select.innerHTML="";
 
-  snap.forEach(docu=>{
-    const op = document.createElement("option");
-    op.value = docu.id;
-    op.textContent = docu.data().nombre;
-    select.appendChild(op);
-  });
 
-  if(select.value){
-    proyectoActual = select.value;
-    cargarTodo();
-  }
+function cargarDatos(){
+
+    db.collection("parche").doc("data").onSnapshot(doc=>{
+
+        const data = doc.data() || {};
+
+        const integrantes = data.integrantes || [];
+        const ingresos = data.ingresos || [];
+        const gastos = data.gastos || [];
+        const deudas = data.deudas || [];
+
+        renderIntegrantes(integrantes);
+        renderSelects(integrantes);
+        renderIngresos(ingresos);
+        renderGastos(gastos);
+        renderDeudas(deudas);
+        renderRanking(ingresos, integrantes);
+
+    });
+
 }
 
-document.getElementById("proyectoSelect").addEventListener("change",e=>{
-  proyectoActual = e.target.value;
-  cargarTodo();
-});
+
+
+function guardar(data){
+    db.collection("parche").doc("data").set(data,{merge:true});
+}
+
+
+
+async function obtener(){
+    const doc = await db.collection("parche").doc("data").get();
+    return doc.data() || {};
+}
+
+
 
 async function agregarIntegrante(){
-  if(!admin) return alert("Solo admin");
 
-  const nombre = document.getElementById("nombreIntegrante").value;
+    if(!admin) return alert("Solo admin");
 
-  await fb.addDoc(fb.collection(db,"proyectos",proyectoActual,"integrantes"),{
-    nombre
-  });
+    const nombre = document.getElementById("nombreIntegrante").value.trim();
+    if(!nombre) return;
 
-  cargarTodo();
+    const data = await obtener();
+
+    const lista = data.integrantes || [];
+
+    lista.push({
+        nombre,
+        color: colores[lista.length % colores.length]
+    });
+
+    guardar({integrantes: lista});
+
+    document.getElementById("nombreIntegrante").value="";
 }
 
-async function cargarIntegrantes(){
-  const cont = document.getElementById("listaIntegrantes");
-  cont.innerHTML="";
 
-  const snap = await fb.getDocs(fb.collection(db,"proyectos",proyectoActual,"integrantes"));
 
-  let i=0;
+function renderIntegrantes(lista){
 
-  snap.forEach(docu=>{
-    const data = docu.data();
+    const div = document.getElementById("listaIntegrantes");
+    div.innerHTML="";
 
-    const div = document.createElement("div");
-    div.className="item";
+    lista.forEach((p,i)=>{
 
-    div.innerHTML=`
-      <span class="${colores[i%colores.length]}">${data.nombre}</span>
-      ${admin?`<button class="deleteBtn" onclick="eliminarIntegrante('${docu.id}')">X</button>`:""}
-    `;
+        const row = document.createElement("div");
+        row.className="item";
 
-    cont.appendChild(div);
-    i++;
-  });
+        row.innerHTML = `
+        <span style="color:${p.color};font-weight:bold">${p.nombre}</span>
+        ${admin ? `<div class="delete" onclick="eliminarIntegrante(${i})">X</div>`:""}
+        `;
+
+        div.appendChild(row);
+    });
 }
 
-async function eliminarIntegrante(id){
-  await fb.deleteDoc(fb.doc(db,"proyectos",proyectoActual,"integrantes",id));
-  cargarTodo();
+
+
+async function eliminarIntegrante(i){
+
+    if(!admin) return;
+
+    const data = await obtener();
+    const lista = data.integrantes || [];
+
+    lista.splice(i,1);
+
+    guardar({integrantes:lista});
 }
+
+
+
+function renderSelects(lista){
+
+    const selects = ["selectIngreso","selectGasto","deudor","acreedor"];
+
+    selects.forEach(id=>{
+
+        const s = document.getElementById(id);
+        s.innerHTML="";
+
+        lista.forEach(p=>{
+            const opt = document.createElement("option");
+            opt.value = p.nombre;
+            opt.textContent = p.nombre;
+            s.appendChild(opt);
+        });
+
+    });
+}
+
+
 
 async function agregarIngreso(){
-  if(!admin) return alert("Solo admin");
 
-  const nombre = document.getElementById("selectIngreso").value;
-  const monto = Number(document.getElementById("montoIngreso").value);
+    if(!admin) return alert("Solo admin");
 
-  await fb.addDoc(fb.collection(db,"proyectos",proyectoActual,"ingresos"),{
-    nombre,monto,fecha:new Date()
-  });
+    const nombre = document.getElementById("selectIngreso").value;
+    const monto = Number(document.getElementById("montoIngreso").value);
 
-  cargarTodo();
+    if(!nombre || !monto) return;
+
+    const data = await obtener();
+    const lista = data.ingresos || [];
+
+    lista.push({
+        nombre,
+        monto,
+        fecha: new Date().toLocaleDateString()
+    });
+
+    guardar({ingresos:lista});
+
+    document.getElementById("montoIngreso").value="";
 }
 
-async function agregarEgreso(){
-  if(!admin) return alert("Solo admin");
 
-  const nombre = document.getElementById("selectEgreso").value;
-  const monto = Number(document.getElementById("montoEgreso").value);
 
-  await fb.addDoc(fb.collection(db,"proyectos",proyectoActual,"egresos"),{
-    nombre,monto,fecha:new Date()
-  });
+function renderIngresos(lista){
 
-  cargarTodo();
+    const div = document.getElementById("detalleIngresos");
+    div.innerHTML="";
+
+    let total = 0;
+
+    lista.forEach((item,i)=>{
+
+        total += item.monto;
+
+        const row = document.createElement("div");
+        row.className="item";
+
+        row.innerHTML = `
+        <span>${item.nombre} → ${formatoPesos(item.monto)}</span>
+        ${admin ? `<div class="delete" onclick="eliminarIngreso(${i})">X</div>`:""}
+        `;
+
+        div.appendChild(row);
+    });
+
+    document.getElementById("totalIngresos").innerText =
+        "Total: " + formatoPesos(total);
 }
 
-async function cargarIngresos(){
-  const snap = await fb.getDocs(fb.collection(db,"proyectos",proyectoActual,"ingresos"));
-  const cont = document.getElementById("detalleIngresos");
 
-  cont.innerHTML="";
-  let total=0;
-  let ranking={};
 
-  snap.forEach(docu=>{
-    const d = docu.data();
-    total+=d.monto;
+async function eliminarIngreso(i){
 
-    ranking[d.nombre]=(ranking[d.nombre]||0)+d.monto;
+    const data = await obtener();
+    const lista = data.ingresos || [];
 
-    const div = document.createElement("div");
-    div.className="item";
+    lista.splice(i,1);
 
-    div.innerHTML=`
-      <span>${d.nombre} → ${formato(d.monto)}</span>
-      ${admin?`<button class="deleteBtn" onclick="eliminarIngreso('${docu.id}')">X</button>`:""}
-    `;
-
-    cont.appendChild(div);
-  });
-
-  document.getElementById("totalIngresos").innerText="Total: "+formato(total);
-
-  cargarRanking(ranking);
+    guardar({ingresos:lista});
 }
 
-async function eliminarIngreso(id){
-  await fb.deleteDoc(fb.doc(db,"proyectos",proyectoActual,"ingresos",id));
-  cargarTodo();
+
+
+async function agregarGasto(){
+
+    if(!admin) return alert("Solo admin");
+
+    const persona = document.getElementById("selectGasto").value;
+    const desc = document.getElementById("descGasto").value;
+    const monto = Number(document.getElementById("montoGasto").value);
+
+    if(!persona || !monto) return;
+
+    const data = await obtener();
+    const lista = data.gastos || [];
+
+    lista.push({
+        persona,
+        desc,
+        monto,
+        fecha: new Date().toLocaleDateString()
+    });
+
+    guardar({gastos:lista});
+
+    document.getElementById("descGasto").value="";
+    document.getElementById("montoGasto").value="";
 }
 
-async function cargarEgresos(){
-  const snap = await fb.getDocs(fb.collection(db,"proyectos",proyectoActual,"egresos"));
-  const cont = document.getElementById("detalleEgresos");
 
-  cont.innerHTML="";
-  let total=0;
 
-  snap.forEach(docu=>{
-    const d = docu.data();
-    total+=d.monto;
+function renderGastos(lista){
 
-    const div = document.createElement("div");
-    div.className="item";
+    const div = document.getElementById("detalleGastos");
+    div.innerHTML="";
 
-    div.innerHTML=`
-      <span>${d.nombre} → ${formato(d.monto)}</span>
-      ${admin?`<button class="deleteBtn" onclick="eliminarEgreso('${docu.id}')">X</button>`:""}
-    `;
+    let total = 0;
 
-    cont.appendChild(div);
-  });
+    lista.forEach((g,i)=>{
 
-  document.getElementById("totalEgresos").innerText="Total: "+formato(total);
+        total += g.monto;
+
+        const row = document.createElement("div");
+        row.className="item";
+
+        row.innerHTML = `
+        <span>${g.desc} → ${formatoPesos(g.monto)}</span>
+        ${admin ? `<div class="delete" onclick="eliminarGasto(${i})">X</div>`:""}
+        `;
+
+        div.appendChild(row);
+    });
+
+    document.getElementById("totalGastos").innerText =
+        "Total: " + formatoPesos(total);
 }
 
-async function eliminarEgreso(id){
-  await fb.deleteDoc(fb.doc(db,"proyectos",proyectoActual,"egresos",id));
-  cargarTodo();
+
+
+async function eliminarGasto(i){
+
+    const data = await obtener();
+    const lista = data.gastos || [];
+
+    lista.splice(i,1);
+
+    guardar({gastos:lista});
 }
 
-function cargarRanking(ranking){
-  const div = document.getElementById("ranking");
-  div.innerHTML="";
 
-  const orden = Object.entries(ranking).sort((a,b)=>b[1]-a[1]);
-
-  const medallas=["🥇","🥈","🥉"];
-
-  orden.forEach((r,i)=>{
-    const p = document.createElement("p");
-    p.innerText=`${medallas[i]||"🏅"} ${r[0]} — ${formato(r[1])}`;
-    div.appendChild(p);
-  });
-}
 
 async function agregarDeuda(){
-  if(!admin) return alert("Solo admin");
 
-  const deudor=document.getElementById("deudor").value;
-  const acreedor=document.getElementById("acreedor").value;
-  const monto=Number(document.getElementById("montoDeuda").value);
+    if(!admin) return alert("Solo admin");
 
-  await fb.addDoc(fb.collection(db,"proyectos",proyectoActual,"deudas"),{
-    deudor,acreedor,monto
-  });
+    const deudor = document.getElementById("deudor").value;
+    const acreedor = document.getElementById("acreedor").value;
+    const monto = Number(document.getElementById("montoDeuda").value);
 
-  cargarTodo();
+    const data = await obtener();
+    const lista = data.deudas || [];
+
+    lista.push({deudor,acreedor,monto});
+
+    guardar({deudas:lista});
 }
 
-async function cargarDeudas(){
-  const cont=document.getElementById("listaDeudas");
-  cont.innerHTML="";
 
-  const snap=await fb.getDocs(fb.collection(db,"proyectos",proyectoActual,"deudas"));
 
-  snap.forEach(docu=>{
-    const d=docu.data();
+function renderDeudas(lista){
 
-    const div=document.createElement("div");
-    div.className="item";
+    const div = document.getElementById("listaDeudas");
+    div.innerHTML="";
 
-    div.innerHTML=`
-      <span>${d.deudor} debe a ${d.acreedor} → ${formato(d.monto)}</span>
-      ${admin?`<button class="deleteBtn" onclick="eliminarDeuda('${docu.id}')">X</button>`:""}
-    `;
+    lista.forEach((d,i)=>{
 
-    cont.appendChild(div);
-  });
+        const row = document.createElement("div");
+        row.className="item";
+
+        row.innerHTML = `
+        <span>${d.deudor} → ${d.acreedor} ${formatoPesos(d.monto)}</span>
+        ${admin ? `<div class="delete" onclick="eliminarDeuda(${i})">X</div>`:""}
+        `;
+
+        div.appendChild(row);
+    });
 }
 
-async function eliminarDeuda(id){
-  await fb.deleteDoc(fb.doc(db,"proyectos",proyectoActual,"deudas",id));
-  cargarTodo();
+
+
+async function eliminarDeuda(i){
+
+    const data = await obtener();
+    const lista = data.deudas || [];
+
+    lista.splice(i,1);
+
+    guardar({deudas:lista});
 }
 
-function compartirWhatsApp(){
 
-  const totalIng = document.getElementById("totalIngresos").innerText;
-  const totalEgr = document.getElementById("totalEgresos").innerText;
 
-  const msg =
-`🍻 *Reporte Oficial del Parche* 🍻
+function renderRanking(ingresos, integrantes){
 
-${totalIng}
-${totalEgr}
+    const ranking = {};
 
-📊 Estado actualizado en tiempo real.
+    ingresos.forEach(i=>{
+        ranking[i.nombre] = (ranking[i.nombre] || 0) + i.monto;
+    });
 
-💸 Revisen deudas pendientes en la app.
+    const lista = Object.entries(ranking)
+        .sort((a,b)=>b[1]-a[1]);
 
-🔥 ¡Vamos que todavía queda presupuesto para la rumba!`;
+    const div = document.getElementById("ranking");
+    div.innerHTML="";
 
-  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
+    lista.forEach((p,i)=>{
+
+        const medal =
+            i===0?"🥇":
+            i===1?"🥈":
+            i===2?"🥉":"";
+
+        const row = document.createElement("div");
+        row.className="item";
+
+        row.innerHTML = `
+        <span>${medal} ${p[0]} → ${formatoPesos(p[1])}</span>
+        `;
+
+        div.appendChild(row);
+    });
 }
 
-async function cargarTodo(){
-  if(!proyectoActual) return;
 
-  cargarIntegrantes();
-  cargarIngresos();
-  cargarEgresos();
-  cargarDeudas();
+
+async function enviarWhatsApp(){
+
+    const data = await obtener();
+
+    const ingresos = data.ingresos || [];
+    const gastos = data.gastos || [];
+
+    const totalIng = ingresos.reduce((a,b)=>a+b.monto,0);
+    const totalGas = gastos.reduce((a,b)=>a+b.monto,0);
+
+    const saldo = totalIng - totalGas;
+
+    let msg =
+`🍻 *Resumen del Parche* 🍻
+
+💰 Ingresos: ${formatoPesos(totalIng)}
+💸 Gastos: ${formatoPesos(totalGas)}
+📊 Saldo: ${formatoPesos(saldo)}
+
+🔥 Seguimos firmes equipo`;
+
+    const url = "https://wa.me/?text=" + encodeURIComponent(msg);
+
+    window.open(url,"_blank");
 }
 
-cargarProyectos();
+
+
+cargarDatos();
