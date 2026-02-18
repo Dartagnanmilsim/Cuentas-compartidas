@@ -1,61 +1,68 @@
 body{
-  font-family:Arial, sans-serif;
-  background:#f2f2f2;
-  margin:0;
-  padding:10px;
+font-family: Arial;
+background:#f2f2f2;
+padding:15px;
 }
 
 h1{
-  text-align:center;
+text-align:center;
 }
 
 .card{
-  background:white;
-  padding:15px;
-  margin:10px 0;
-  border-radius:15px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+background:white;
+padding:15px;
+margin-bottom:15px;
+border-radius:12px;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
-.highlight{
-  background:#dff0d8;
-}
-
-input, select, button{
-  width:100%;
-  padding:10px;
-  margin-top:8px;
-  border-radius:10px;
-  border:1px solid #ccc;
-  font-size:16px;
+input,select{
+width:100%;
+padding:10px;
+margin:5px 0;
+border-radius:8px;
+border:1px solid #ccc;
 }
 
 button{
-  background:#4CAF50;
-  color:white;
-  border:none;
+width:100%;
+padding:12px;
+background:#4CAF50;
+color:white;
+border:none;
+border-radius:10px;
+font-weight:bold;
+margin-top:5px;
+}
+
+button.danger{
+background:#e74c3c;
 }
 
 .item{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  background:#fafafa;
-  padding:12px;
-  border-radius:12px;
-  margin-top:8px;
-  border:1px solid #eee;
+display:flex;
+justify-content:space-between;
+align-items:center;
+background:#f7f7f7;
+padding:10px;
+border-radius:10px;
+margin-top:5px;
 }
 
-.btn-delete{
-  width:32px;
-  height:32px;
-  border-radius:50%;
-  border:none;
-  background:#ffe5e5;
-  color:#d33;
-  font-size:18px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+.deleteBtn{
+width:30px;
+height:30px;
+border-radius:50%;
+background:#ffdddd;
+color:#c0392b;
+display:flex;
+align-items:center;
+justify-content:center;
+font-weight:bold;
+cursor:pointer;
+}
+
+.resumen{
+background:#dff0d8;
+text-align:center;
 }
