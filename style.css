@@ -22,6 +22,7 @@ input, select, button {
   padding: 12px;
   margin: 6px 0;
   font-size: 16px;
+  box-sizing: border-box;
 }
 
 button {
@@ -29,6 +30,7 @@ button {
   color: white;
   border: none;
   border-radius: 10px;
+  font-weight: bold;
 }
 
 .grid {
@@ -50,28 +52,39 @@ button {
   align-items: center;
   background: #fafafa;
   padding: 12px;
-  border-radius: 10px;
+  border-radius: 12px;
   margin-top: 8px;
+  border: 1px solid #eee;
+}
+
+.people-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .avatar {
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   color: white;
+  font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
 }
 
 .btn-delete {
-  background: #ffe5e5;
-  color: #e53935;
-  border: none;
-  border-radius: 50%;
   width: 32px;
   height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #ffe5e5;
+  color: #e53935;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .total {
