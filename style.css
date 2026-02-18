@@ -1,71 +1,62 @@
-body{
-font-family:Arial, Helvetica, sans-serif;
-background:#f2f2f2;
-margin:0;
-padding:15px;
+body {
+  font-family: Arial, sans-serif;
+  background: #f2f2f2;
+  padding: 20px;
 }
 
-h1{
-text-align:center;
+h1 {
+  text-align: center;
 }
 
-.card{
-background:white;
-padding:15px;
-border-radius:15px;
-margin-bottom:20px;
-box-shadow:0 3px 8px rgba(0,0,0,0.1);
+.card {
+  background: white;
+  padding: 15px;
+  margin: 15px 0;
+  border-radius: 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
-.balance{
-background:#dff5df;
-text-align:center;
+button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: #4CAF50;
+  color: white;
+  font-size: 16px;
+  margin-top: 10px;
 }
 
-input,select{
-width:100%;
-padding:12px;
-margin-top:8px;
-margin-bottom:10px;
-border-radius:10px;
-border:1px solid #ccc;
-font-size:16px;
+button.danger {
+  background: #e53935;
 }
 
-button{
-width:100%;
-padding:12px;
-border:none;
-border-radius:10px;
-background:#4CAF50;
-color:white;
-font-size:16px;
-margin-top:5px;
+input, select {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
 }
 
-button.danger{
-background:#e74c3c;
+.resultado {
+  background: #dff5e1;
+  text-align: center;
 }
 
-.item{
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:10px;
-margin-top:8px;
-background:#f7f7f7;
-border-radius:10px;
+.item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  margin-top: 8px;
 }
 
-.deleteBtn{
-width:30px;
-height:30px;
-border-radius:50%;
-background:#ffdddd;
-color:#c0392b;
-display:flex;
-align-items:center;
-justify-content:center;
-font-weight:bold;
-cursor:pointer;
+.delete {
+  background: #ffdddd;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  border: none;
 }
