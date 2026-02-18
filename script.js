@@ -23,8 +23,6 @@ let role = "viewer";
 let currentProject = null;
 let data = { people: [], transactions: [] };
 
-const colors = ["#ff6b6b","#6bc5ff","#6bff95","#d96bff","#ffb36b","#6b83ff"];
-
 function ref(){ return doc(db,"budgets",currentProject); }
 
 async function save(){
@@ -110,18 +108,6 @@ window.addPerson=function(){
   save();
 };
 
-window.deletePerson=function(i){
-
-  if(!isAdmin()) return;
-
-  let name=data.people[i];
-
-  data.people.splice(i,1);
-  data.transactions=data.transactions.filter(t=>t.person!==name);
-
-  save();
-};
-
 window.addTransaction=function(type){
 
   if(!isAdmin()) return;
@@ -138,59 +124,87 @@ window.addTransaction=function(type){
 
   if(!person || !amount) return;
 
-  data.transactions.push({person,amount,type});
-
-  save();
-
-  partyMode();
-};
-
-window.deleteTransaction=function(i){
-
-  if(!isAdmin()) return;
-
-  data.transactions.splice(i,1);
+  data.transactions.push({
+    person,
+    amount,
+    type,
+    date: new Date().toISOString()
+  });
 
   save();
 };
-
-function partyMode(){
-
-  const emojis=["🍻","🎉","🔥","💸","🕺","🟢","🟡","🔵"];
-
-  for(let i=0;i<12;i++){
-
-    let el=document.createElement("div");
-
-    el.innerText=emojis[Math.floor(Math.random()*emojis.length)];
-    el.style.position="fixed";
-    el.style.left=Math.random()*100+"%";
-    el.style.top="0px";
-    el.style.fontSize="28px";
-    el.style.zIndex="9999";
-
-    el.animate([
-      { transform:"translateY(0)", opacity:1 },
-      { transform:"translateY(500px)", opacity:0 }
-    ],{
-      duration:1500
-    });
-
-    document.body.appendChild(el);
-
-    setTimeout(()=>el.remove(),1500);
-  }
-}
 
 function formatMoney(n){
   return n.toLocaleString("es-CO",{minimumFractionDigits:2});
 }
 
-function getAvatarColor(name){
+function calculateBalances(){
 
-  let index=name.charCodeAt(0)%colors.length;
-  return colors[index];
+  let balances={};
+
+  data.people.forEach(p=>balances[p]=0);
+
+  data.transactions.forEach(t=>{
+    if(t.type==="income") balances[t.person]+=t.amount;
+    else balances[t.person]-=t.amount;
+  });
+
+  return balances;
 }
+
+function calculateDebts(balances){
+
+  let result=[];
+
+  let creditors=[];
+  let debtors=[];
+
+  Object.entries(balances).forEach(([p,v])=>{
+    if(v>0) creditors.push({p,v});
+    if(v<0) debtors.push({p,v});
+  });
+
+  debtors.forEach(d=>{
+    creditors.forEach(c=>{
+      if(d.v===0) return;
+
+      let pay=Math.min(c.v,Math.abs(d.v));
+
+      if(pay>0){
+        result.push(`${d.p} debe $${formatMoney(pay)} a ${c.p}`);
+        c.v-=pay;
+        d.v+=pay;
+      }
+    });
+  });
+
+  return result;
+}
+
+function showDetail(person,type){
+
+  let list=data.transactions
+    .filter(t=>t.person===person && t.type===type);
+
+  let html="";
+
+  list.forEach(t=>{
+    html+=`
+      <div>
+        $${formatMoney(t.amount)} — ${new Date(t.date).toLocaleDateString()}
+      </div>
+    `;
+  });
+
+  document.getElementById("modalTitle").innerText=`Detalle ${person}`;
+  document.getElementById("modalBody").innerHTML=html;
+
+  document.getElementById("modal").classList.remove("hidden");
+}
+
+window.closeModal=function(){
+  document.getElementById("modal").classList.add("hidden");
+};
 
 function updateUI(){
 
@@ -204,21 +218,9 @@ function updateUI(){
   incomeSelect.innerHTML="";
   expenseSelect.innerHTML="";
 
-  data.people.forEach((p,i)=>{
+  data.people.forEach(p=>{
 
-    let color=getAvatarColor(p);
-
-    peopleList.innerHTML+=`
-      <div class="people-item">
-        <div class="people-left">
-          <div class="avatar" style="background:${color}">
-            ${p[0].toUpperCase()}
-          </div>
-          ${p}
-        </div>
-        ${isAdmin()?`<button class="btn-delete" onclick="deletePerson(${i})">✕</button>`:""}
-      </div>
-    `;
+    peopleList.innerHTML+=`<div class="people-item">${p}</div>`;
 
     let opt=document.createElement("option");
     opt.value=p;
@@ -231,43 +233,34 @@ function updateUI(){
   let totalIncome=0;
   let totalExpense=0;
 
-  let incomeList=document.getElementById("incomeList");
-  let expenseList=document.getElementById("expenseList");
-
-  incomeList.innerHTML="";
-  expenseList.innerHTML="";
-
   let ranking={};
 
-  data.transactions.forEach((t,i)=>{
+  data.transactions.forEach(t=>{
 
     if(!ranking[t.person]) ranking[t.person]=0;
     if(t.type==="income") ranking[t.person]+=t.amount;
 
-    let html=`
-      <div class="item">
-        <span>${t.person} - $${formatMoney(t.amount)}</span>
-        ${isAdmin()?`<button class="btn-delete" onclick="deleteTransaction(${i})">✕</button>`:""}
-      </div>
-    `;
-
-    if(t.type==="income"){
-      totalIncome+=t.amount;
-      incomeList.innerHTML+=html;
-    }else{
-      totalExpense+=t.amount;
-      expenseList.innerHTML+=html;
-    }
+    if(t.type==="income") totalIncome+=t.amount;
+    else totalExpense+=t.amount;
   });
 
   document.getElementById("totalIncome").innerText=formatMoney(totalIncome);
   document.getElementById("totalExpense").innerText=formatMoney(totalExpense);
 
   let balance=totalIncome-totalExpense;
-
   document.getElementById("balance").innerText="$ "+formatMoney(balance);
 
   updateRanking(ranking);
+
+  let balances=calculateBalances();
+  let debts=calculateDebts(balances);
+
+  let debtsDiv=document.getElementById("debts");
+  debtsDiv.innerHTML="";
+
+  debts.forEach(d=>{
+    debtsDiv.innerHTML+=`<div class="item">${d}</div>`;
+  });
 }
 
 function updateRanking(ranking){
@@ -285,8 +278,7 @@ function updateRanking(ranking){
 
     div.innerHTML+=`
       <div class="item">
-        <span>${medal} ${r[0]}</span>
-        <strong>$${formatMoney(r[1])}</strong>
+        ${medal} ${r[0]} — $${formatMoney(r[1])}
       </div>
     `;
   });
