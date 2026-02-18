@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control de Gastos</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>💰 Gastos del Grupo</h1>
+
+<div class="card">
+  <h2>Agregar Persona</h2>
+  <input type="text" id="personName" placeholder="Nombre">
+  <button onclick="addPerson()">Agregar</button>
+</div>
+
+<div class="card">
+  <h2>Registrar Movimiento</h2>
+
+  <select id="personSelect"></select>
+
+  <input type="number" id="amount" placeholder="Monto">
+
+  <select id="type">
+    <option value="deposit">Aporte</option>
+    <option value="expense">Gasto</option>
+  </select>
+
+  <button onclick="addTransaction()">Guardar</button>
+</div>
+
+<div class="card">
+  <h2>Resumen</h2>
+  <div id="summary"></div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
