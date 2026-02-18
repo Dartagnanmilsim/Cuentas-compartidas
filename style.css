@@ -1,80 +1,76 @@
 body{
-font-family: Arial, sans-serif;
-background:#f2f2f2;
-margin:0;
-padding:0;
+  font-family: Arial, sans-serif;
+  background:#f2f2f2;
+  margin:0;
 }
 
 .container{
-max-width:600px;
-margin:auto;
-padding:15px;
-}
-
-h1{
-text-align:center;
+  max-width:600px;
+  margin:auto;
+  padding:15px;
 }
 
 .card{
-background:white;
-padding:20px;
-margin:15px 0;
-border-radius:15px;
-box-shadow:0 2px 6px rgba(0,0,0,0.1);
-}
-
-.row{
-display:flex;
-gap:10px;
-margin-bottom:10px;
-}
-
-input, select{
-flex:1;
-padding:12px;
-border-radius:10px;
-border:1px solid #ccc;
-font-size:16px;
+  background:white;
+  padding:20px;
+  border-radius:15px;
+  margin-bottom:20px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
 button{
-background:#4CAF50;
-color:white;
-border:none;
-padding:12px;
-border-radius:10px;
-font-size:16px;
-cursor:pointer;
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border:none;
+  border-radius:10px;
+  background:#4CAF50;
+  color:white;
+  font-size:16px;
 }
 
-button:hover{
-background:#43a047;
+button.danger{
+  background:#e74c3c;
 }
 
-.delete{
-background:#ff4d4d;
-border-radius:50%;
-width:28px;
-height:28px;
-display:flex;
-align-items:center;
-justify-content:center;
-color:white;
-font-weight:bold;
-cursor:pointer;
-margin-left:10px;
+button.whatsapp{
+  background:#25D366;
+}
+
+input,select{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border-radius:10px;
+  border:1px solid #ccc;
+}
+
+.resumen{
+  background:#e8f5e9;
+  text-align:center;
 }
 
 .item{
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:8px 0;
-border-bottom:1px solid #eee;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:8px 0;
 }
 
-.whatsapp{
-width:100%;
-background:#25D366;
-margin-top:15px;
+.deleteBtn{
+  background:#f8d7da;
+  color:#a00;
+  border:none;
+  border-radius:50%;
+  width:26px;
+  height:26px;
+  font-size:14px;
+  cursor:pointer;
 }
+
+/* colores integrantes */
+.color1{color:#e74c3c;font-weight:bold;}
+.color2{color:#3498db;font-weight:bold;}
+.color3{color:#27ae60;font-weight:bold;}
+.color4{color:#9b59b6;font-weight:bold;}
+.color5{color:#f39c12;font-weight:bold;}
