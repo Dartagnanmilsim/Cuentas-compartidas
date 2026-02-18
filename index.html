@@ -10,7 +10,6 @@
 
 <h1>🍻 Gastos del Parche</h1>
 
-<!-- PROYECTO -->
 <div class="card">
   <h2>📂 Proyecto</h2>
 
@@ -23,7 +22,6 @@
   <button onclick="createProject()">Crear</button>
 </div>
 
-<!-- LOGIN -->
 <div class="card">
   <h2>🔐 Acceso Admin</h2>
   <input type="password" id="adminPass" placeholder="Clave admin">
@@ -36,13 +34,11 @@
   <h2>🤙 El Combo</h2>
   <input type="text" id="personName" placeholder="Nombre">
   <button onclick="addPerson()">Agregar</button>
-
   <div id="peopleList"></div>
 </div>
 
 <div class="grid">
 
-  <!-- INGRESOS -->
   <div class="card">
     <h2>🍻 Quién puso</h2>
 
@@ -55,7 +51,6 @@
     <h3>Total: <span id="totalIncome">0</span></h3>
   </div>
 
-  <!-- GASTOS -->
   <div class="card">
     <h2>💩 En qué se fue</h2>
 
@@ -70,11 +65,21 @@
 
 </div>
 
-<!-- BALANCE -->
 <div class="card total">
   <h2>🔥 Cómo vamos</h2>
   <h3 id="balance">$0</h3>
+  <p id="funMessage"></p>
+
+  <button onclick="shareWhatsApp()">📲 Compartir WhatsApp</button>
 </div>
+
+<!-- RANKING -->
+<div class="card">
+  <h2>🏆 Ranking del Parche</h2>
+  <div id="ranking"></div>
+</div>
+
+<div id="party"></div>
 
 <script type="module" src="script.js"></script>
 
