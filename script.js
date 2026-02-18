@@ -236,11 +236,22 @@ const d=docu.data();
 if(d.proyecto!==proyectoActual) return;
 
 total+=Number(d.monto);
-
 rankingTemp[d.persona]=(rankingTemp[d.persona]||0)+Number(d.monto);
 
 const li=document.createElement("li");
-li.textContent=`${d.persona} → ${formato(d.monto)}`;
+li.innerHTML=`${d.persona} → ${formato(d.monto)}`;
+
+if(admin){
+const btn=document.createElement("button");
+btn.textContent="X";
+btn.className="delete-btn";
+
+btn.onclick=async()=>{
+await deleteDoc(doc(db,"ingresos",docu.id));
+};
+
+li.appendChild(btn);
+}
 
 lista.appendChild(li);
 
@@ -269,7 +280,19 @@ if(d.proyecto!==proyectoActual) return;
 total+=Number(d.monto);
 
 const li=document.createElement("li");
-li.textContent=`${d.persona} → ${formato(d.monto)}`;
+li.innerHTML=`${d.persona} → ${formato(d.monto)}`;
+
+if(admin){
+const btn=document.createElement("button");
+btn.textContent="X";
+btn.className="delete-btn";
+
+btn.onclick=async()=>{
+await deleteDoc(doc(db,"gastos",docu.id));
+};
+
+li.appendChild(btn);
+}
 
 lista.appendChild(li);
 
@@ -294,7 +317,19 @@ const d=docu.data();
 if(d.proyecto!==proyectoActual) return;
 
 const li=document.createElement("li");
-li.textContent=`${d.deudor} debe ${formato(d.monto)} a ${d.acreedor}`;
+li.innerHTML=`${d.deudor} debe ${formato(d.monto)} a ${d.acreedor}`;
+
+if(admin){
+const btn=document.createElement("button");
+btn.textContent="X";
+btn.className="delete-btn";
+
+btn.onclick=async()=>{
+await deleteDoc(doc(db,"deudas",docu.id));
+};
+
+li.appendChild(btn);
+}
 
 lista.appendChild(li);
 
