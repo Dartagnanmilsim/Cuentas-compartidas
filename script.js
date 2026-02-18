@@ -1,267 +1,298 @@
-let admin = false;
-let proyectoActual = null;
+import { ref, push, onValue, remove, set } 
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const colores = ["color1","color2","color3","color4","color5"];
+const db = window.db;
+const proyecto = "default";
 
-function formato(n){
-  return "$ " + Number(n).toLocaleString("es-CO");
+let personas = [];
+let ingresos = [];
+let gastos = [];
+
+/* COLORES */
+
+function colorPersona(nombre){
+const index = personas.findIndex(p=>p.nombre===nombre);
+return "color-"+(index%5);
 }
 
-function loginAdmin(){
-  const pass = document.getElementById("adminPass").value;
-  if(pass === "1234"){
-    admin = true;
-    document.getElementById("modoAdmin").innerText = "Modo 👑 Admin";
-  }else{
-    alert("Clave incorrecta");
-  }
+/* FORMATO */
+
+function money(n){
+return "$ " + Number(n || 0).toLocaleString("es-CO");
 }
 
-async function crearProyecto(){
-  const nombre = document.getElementById("nuevoProyecto").value;
-  if(!nombre) return;
+/* PERSONAS */
 
-  await fb.addDoc(fb.collection(db,"proyectos"),{nombre});
-  cargarProyectos();
+window.agregarPersona = function(){
+
+const nombre = document.getElementById("nombrePersona").value.trim();
+if(!nombre) return;
+
+personas.push({nombre});
+guardarPersonas();
+
+document.getElementById("nombrePersona").value="";
+
 }
 
-async function cargarProyectos(){
-  const snap = await fb.getDocs(fb.collection(db,"proyectos"));
-  const select = document.getElementById("proyectoSelect");
-  select.innerHTML="";
-
-  snap.forEach(docu=>{
-    const op = document.createElement("option");
-    op.value = docu.id;
-    op.textContent = docu.data().nombre;
-    select.appendChild(op);
-  });
-
-  if(select.value){
-    proyectoActual = select.value;
-    cargarTodo();
-  }
+function guardarPersonas(){
+set(ref(db, "data/personas"), personas);
 }
 
-document.getElementById("proyectoSelect").addEventListener("change",e=>{
-  proyectoActual = e.target.value;
-  cargarTodo();
+function renderPersonas(){
+
+const cont = document.getElementById("listaPersonas");
+cont.innerHTML="";
+
+personas.forEach((p,i)=>{
+
+const div = document.createElement("div");
+div.className="item";
+
+div.innerHTML=`
+<span class="${colorPersona(p.nombre)}"><b>${p.nombre}</b></span>
+<div class="delete-btn" onclick="eliminarPersona(${i})">X</div>
+`;
+
+cont.appendChild(div);
+
 });
 
-async function agregarIntegrante(){
-  if(!admin) return alert("Solo admin");
-
-  const nombre = document.getElementById("nombreIntegrante").value;
-
-  await fb.addDoc(fb.collection(db,"proyectos",proyectoActual,"integrantes"),{
-    nombre
-  });
-
-  cargarTodo();
 }
 
-async function cargarIntegrantes(){
-  const cont = document.getElementById("listaIntegrantes");
-  cont.innerHTML="";
+/* SELECTS */
 
-  const snap = await fb.getDocs(fb.collection(db,"proyectos",proyectoActual,"integrantes"));
+function cargarSelects(){
 
-  let i=0;
+const sel1 = document.getElementById("personaIngreso");
+const sel2 = document.getElementById("personaGasto");
 
-  snap.forEach(docu=>{
-    const data = docu.data();
+sel1.innerHTML='<option value="">Seleccionar</option>';
+sel2.innerHTML='<option value="">Seleccionar</option>';
 
-    const div = document.createElement("div");
-    div.className="item";
+personas.forEach(p=>{
 
-    div.innerHTML=`
-      <span class="${colores[i%colores.length]}">${data.nombre}</span>
-      ${admin?`<button class="deleteBtn" onclick="eliminarIntegrante('${docu.id}')">X</button>`:""}
-    `;
+const o1=document.createElement("option");
+o1.value=p.nombre;
+o1.textContent=p.nombre;
 
-    cont.appendChild(div);
-    i++;
-  });
+const o2=document.createElement("option");
+o2.value=p.nombre;
+o2.textContent=p.nombre;
+
+sel1.appendChild(o1);
+sel2.appendChild(o2);
+
+});
+
 }
 
-async function eliminarIntegrante(id){
-  await fb.deleteDoc(fb.doc(db,"proyectos",proyectoActual,"integrantes",id));
-  cargarTodo();
+/* ELIMINAR PERSONA */
+
+window.eliminarPersona=function(i){
+personas.splice(i,1);
+guardarPersonas();
 }
 
-async function agregarIngreso(){
-  if(!admin) return alert("Solo admin");
+/* INGRESOS */
 
-  const nombre = document.getElementById("selectIngreso").value;
-  const monto = Number(document.getElementById("montoIngreso").value);
+window.agregarIngreso=function(){
 
-  await fb.addDoc(fb.collection(db,"proyectos",proyectoActual,"ingresos"),{
-    nombre,monto,fecha:new Date()
-  });
+const persona=document.getElementById("personaIngreso").value;
+const monto=Number(document.getElementById("montoIngreso").value);
 
-  cargarTodo();
+if(!persona||!monto) return;
+
+push(ref(db,"data/ingresos"),{
+persona,
+monto,
+fecha:Date.now()
+});
+
+document.getElementById("montoIngreso").value="";
+
 }
 
-async function agregarEgreso(){
-  if(!admin) return alert("Solo admin");
+function renderIngresos(){
 
-  const nombre = document.getElementById("selectEgreso").value;
-  const monto = Number(document.getElementById("montoEgreso").value);
+let total=0;
+const cont=document.getElementById("listaIngresos");
+cont.innerHTML="";
 
-  await fb.addDoc(fb.collection(db,"proyectos",proyectoActual,"egresos"),{
-    nombre,monto,fecha:new Date()
-  });
+ingresos.forEach(i=>{
 
-  cargarTodo();
+total+=i.monto;
+
+const div=document.createElement("div");
+div.className="item";
+
+div.innerHTML=`
+<span class="${colorPersona(i.persona)}">
+${i.persona} → ${money(i.monto)}
+</span>
+`;
+
+cont.appendChild(div);
+
+});
+
+document.getElementById("totalIngresos").innerText="Total: "+money(total);
+
 }
 
-async function cargarIngresos(){
-  const snap = await fb.getDocs(fb.collection(db,"proyectos",proyectoActual,"ingresos"));
-  const cont = document.getElementById("detalleIngresos");
+/* GASTOS */
 
-  cont.innerHTML="";
-  let total=0;
-  let ranking={};
+window.agregarGasto=function(){
 
-  snap.forEach(docu=>{
-    const d = docu.data();
-    total+=d.monto;
+const persona=document.getElementById("personaGasto").value;
+const desc=document.getElementById("descripcionGasto").value;
+const monto=Number(document.getElementById("montoGasto").value);
 
-    ranking[d.nombre]=(ranking[d.nombre]||0)+d.monto;
+if(!persona||!monto) return;
 
-    const div = document.createElement("div");
-    div.className="item";
+push(ref(db,"data/gastos"),{
+persona,
+desc,
+monto,
+fecha:Date.now()
+});
 
-    div.innerHTML=`
-      <span>${d.nombre} → ${formato(d.monto)}</span>
-      ${admin?`<button class="deleteBtn" onclick="eliminarIngreso('${docu.id}')">X</button>`:""}
-    `;
+document.getElementById("descripcionGasto").value="";
+document.getElementById("montoGasto").value="";
 
-    cont.appendChild(div);
-  });
-
-  document.getElementById("totalIngresos").innerText="Total: "+formato(total);
-
-  cargarRanking(ranking);
 }
 
-async function eliminarIngreso(id){
-  await fb.deleteDoc(fb.doc(db,"proyectos",proyectoActual,"ingresos",id));
-  cargarTodo();
+function renderGastos(){
+
+let total=0;
+const cont=document.getElementById("listaGastos");
+cont.innerHTML="";
+
+gastos.forEach(g=>{
+
+total+=g.monto;
+
+const div=document.createElement("div");
+div.className="item";
+
+div.innerHTML=`
+<span class="${colorPersona(g.persona)}">
+${g.persona} → ${g.desc} → ${money(g.monto)}
+</span>
+`;
+
+cont.appendChild(div);
+
+});
+
+document.getElementById("totalGastos").innerText="Total: "+money(total);
+
 }
 
-async function cargarEgresos(){
-  const snap = await fb.getDocs(fb.collection(db,"proyectos",proyectoActual,"egresos"));
-  const cont = document.getElementById("detalleEgresos");
+/* BALANCE */
 
-  cont.innerHTML="";
-  let total=0;
+function renderBalance(){
 
-  snap.forEach(docu=>{
-    const d = docu.data();
-    total+=d.monto;
+const cont=document.getElementById("balance");
+cont.innerHTML="";
 
-    const div = document.createElement("div");
-    div.className="item";
+const totalIng=ingresos.reduce((a,b)=>a+b.monto,0);
+const totalGas=gastos.reduce((a,b)=>a+b.monto,0);
 
-    div.innerHTML=`
-      <span>${d.nombre} → ${formato(d.monto)}</span>
-      ${admin?`<button class="deleteBtn" onclick="eliminarEgreso('${docu.id}')">X</button>`:""}
-    `;
+const porPersona={};
 
-    cont.appendChild(div);
-  });
+personas.forEach(p=>porPersona[p.nombre]=0);
 
-  document.getElementById("totalEgresos").innerText="Total: "+formato(total);
+ingresos.forEach(i=>porPersona[i.persona]+=i.monto);
+gastos.forEach(g=>porPersona[g.persona]-=g.monto);
+
+const promedio=totalGas/personas.length||0;
+
+Object.keys(porPersona).forEach(p=>{
+
+const balance=porPersona[p]-promedio;
+
+const div=document.createElement("div");
+div.innerHTML=`${p}: ${money(balance)}`;
+
+cont.appendChild(div);
+
+});
+
 }
 
-async function eliminarEgreso(id){
-  await fb.deleteDoc(fb.doc(db,"proyectos",proyectoActual,"egresos",id));
-  cargarTodo();
+/* RANKING */
+
+function renderRanking(){
+
+const cont=document.getElementById("ranking");
+cont.innerHTML="";
+
+const mapa={};
+
+ingresos.forEach(i=>{
+mapa[i.persona]=(mapa[i.persona]||0)+i.monto;
+});
+
+const arr=Object.entries(mapa).sort((a,b)=>b[1]-a[1]);
+
+arr.forEach((r,i)=>{
+const div=document.createElement("div");
+div.innerHTML=`${i+1}. ${r[0]} → ${money(r[1])}`;
+cont.appendChild(div);
+});
+
 }
 
-function cargarRanking(ranking){
-  const div = document.getElementById("ranking");
-  div.innerHTML="";
+/* WHATSAPP */
 
-  const orden = Object.entries(ranking).sort((a,b)=>b[1]-a[1]);
+window.enviarWhatsApp=function(){
 
-  const medallas=["🥇","🥈","🥉"];
+let txt="🍻 *Resumen Gastos del Parche*\n\n";
 
-  orden.forEach((r,i)=>{
-    const p = document.createElement("p");
-    p.innerText=`${medallas[i]||"🏅"} ${r[0]} — ${formato(r[1])}`;
-    div.appendChild(p);
-  });
+ingresos.forEach(i=>{
+txt+=`${i.persona} puso ${money(i.monto)}\n`;
+});
+
+txt+="\n💩 Gastos\n";
+
+gastos.forEach(g=>{
+txt+=`${g.persona} → ${g.desc} → ${money(g.monto)}\n`;
+});
+
+const url="https://wa.me/?text="+encodeURIComponent(txt);
+window.open(url);
+
 }
 
-async function agregarDeuda(){
-  if(!admin) return alert("Solo admin");
+/* FIREBASE LISTENERS */
 
-  const deudor=document.getElementById("deudor").value;
-  const acreedor=document.getElementById("acreedor").value;
-  const monto=Number(document.getElementById("montoDeuda").value);
+onValue(ref(db,"data/personas"),snap=>{
 
-  await fb.addDoc(fb.collection(db,"proyectos",proyectoActual,"deudas"),{
-    deudor,acreedor,monto
-  });
+personas=snap.val()||[];
 
-  cargarTodo();
-}
+renderPersonas();
+cargarSelects(); // 🔥 ESTA LINEA ARREGLA EL BUG
 
-async function cargarDeudas(){
-  const cont=document.getElementById("listaDeudas");
-  cont.innerHTML="";
+});
 
-  const snap=await fb.getDocs(fb.collection(db,"proyectos",proyectoActual,"deudas"));
+onValue(ref(db,"data/ingresos"),snap=>{
 
-  snap.forEach(docu=>{
-    const d=docu.data();
+const val=snap.val()||{};
+ingresos=Object.values(val);
 
-    const div=document.createElement("div");
-    div.className="item";
+renderIngresos();
+renderBalance();
+renderRanking();
 
-    div.innerHTML=`
-      <span>${d.deudor} debe a ${d.acreedor} → ${formato(d.monto)}</span>
-      ${admin?`<button class="deleteBtn" onclick="eliminarDeuda('${docu.id}')">X</button>`:""}
-    `;
+});
 
-    cont.appendChild(div);
-  });
-}
+onValue(ref(db,"data/gastos"),snap=>{
 
-async function eliminarDeuda(id){
-  await fb.deleteDoc(fb.doc(db,"proyectos",proyectoActual,"deudas",id));
-  cargarTodo();
-}
+const val=snap.val()||{};
+gastos=Object.values(val);
 
-function compartirWhatsApp(){
+renderGastos();
+renderBalance();
 
-  const totalIng = document.getElementById("totalIngresos").innerText;
-  const totalEgr = document.getElementById("totalEgresos").innerText;
-
-  const msg =
-`🍻 *Reporte Oficial del Parche* 🍻
-
-${totalIng}
-${totalEgr}
-
-📊 Estado actualizado en tiempo real.
-
-💸 Revisen deudas pendientes en la app.
-
-🔥 ¡Vamos que todavía queda presupuesto para la rumba!`;
-
-  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
-}
-
-async function cargarTodo(){
-  if(!proyectoActual) return;
-
-  cargarIntegrantes();
-  cargarIngresos();
-  cargarEgresos();
-  cargarDeudas();
-}
-
-cargarProyectos();
+});
