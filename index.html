@@ -6,13 +6,14 @@
 <title>Gastos del Parche</title>
 
 <link rel="stylesheet" href="style.css">
+
+<script type="module" src="script.js"></script>
+
 </head>
 
 <body>
 
 <h1>🍻 Gastos del Parche</h1>
-
-<!-- PROYECTO -->
 
 <div class="card">
 
@@ -27,105 +28,63 @@
 
 </div>
 
-
-<!-- ADMIN -->
-
 <div class="card">
 
 <h2>🔐 Acceso Admin</h2>
 
-<input id="claveAdmin" type="password" placeholder="Clave admin">
-
+<input id="claveAdmin" placeholder="Clave admin" type="password">
 <button onclick="loginAdmin()">Entrar</button>
 
 <p id="modoTexto">Modo 👀 Solo ver</p>
 
 </div>
 
-
-<!-- PERSONAS -->
-
 <div class="card">
 
-<h2>👍 El Combo</h2>
+<h2>🤙 El Combo</h2>
 
-<input id="nombreInput" placeholder="Nombre">
-
+<input id="nombrePersona" placeholder="Nombre">
 <button onclick="agregarPersona()">Agregar</button>
 
 <div id="listaPersonas"></div>
 
 </div>
 
-
-<!-- INGRESOS -->
-
 <div class="card">
 
 <h2>🍻 Quién puso</h2>
 
-<select id="selectIngreso"></select>
+<select id="personaIngreso"></select>
 <input id="montoIngreso" placeholder="Monto">
-
 <button onclick="agregarIngreso()">Agregar</button>
 
 <div id="listaIngresos"></div>
 
-<h3>Total: <span id="totalIngresos">$ 0</span></h3>
+<p>Total: <span id="totalIngresos">$0</span></p>
 
 </div>
-
-
-<!-- GASTOS -->
 
 <div class="card">
 
 <h2>💩 En qué se fue</h2>
 
-<select id="selectGasto"></select>
-<input id="montoGasto" placeholder="Monto">
+<select id="personaEgreso"></select>
+<input id="montoEgreso" placeholder="Monto">
+<button onclick="agregarEgreso()">Agregar</button>
 
-<button onclick="agregarGasto()">Agregar</button>
+<div id="listaEgresos"></div>
 
-<div id="listaGastos"></div>
-
-<h3>Total: <span id="totalGastos">$ 0</span></h3>
+<p>Total: <span id="totalEgresos">$0</span></p>
 
 </div>
 
-
-<!-- BALANCE -->
-
-<div class="card balance">
+<div class="card resultado">
 
 <h2>🔥 Cómo vamos</h2>
 
-<h1 id="balance">$ 0</h1>
-
-<button onclick="compartirWhatsApp()">📲 Compartir WhatsApp</button>
+<h1 id="balanceTotal">$0</h1>
 
 </div>
-
-
-<!-- DEUDAS -->
-
-<div class="card">
-
-<h2>💸 Quién debe a quién</h2>
-
-<select id="deudor"></select>
-<select id="acreedor"></select>
-
-<input id="montoDeuda" placeholder="Monto">
-
-<button onclick="agregarDeuda()">Agregar</button>
-
-<div id="listaDeudas"></div>
-
-</div>
-
-
-<script type="module" src="script.js"></script>
 
 </body>
 </html>
