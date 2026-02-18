@@ -21,9 +21,10 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const ADMIN_PASSWORD = "1234";
-let role = "viewer";
 
-let currentProject = "default";
+let role = "viewer";
+let currentProject = null;
+let unsubscribe = null;
 
 let data = {
   people: [],
@@ -35,6 +36,7 @@ function ref() {
 }
 
 async function save() {
+  if (!currentProject) return;
   await setDoc(ref(), data);
 }
 
@@ -43,7 +45,7 @@ async function loadProjects() {
   const querySnapshot = await getDocs(collection(db, "budgets"));
 
   const select = document.getElementById("projectSelect");
-  select.innerHTML = "";
+  select.innerHTML = '<option value="">Seleccionar...</option>';
 
   querySnapshot.forEach((docSnap) => {
     const option = document.createElement("option");
@@ -51,16 +53,20 @@ async function loadProjects() {
     option.textContent = docSnap.id;
     select.appendChild(option);
   });
-
-  select.value = currentProject;
 }
 
-function listen() {
-  onSnapshot(ref(), (snapshot) => {
+function connectProject() {
+
+  if (!currentProject) return;
+
+  if (unsubscribe) unsubscribe();
+
+  unsubscribe = onSnapshot(ref(), (snapshot) => {
 
     if (snapshot.exists()) {
       data = snapshot.data();
     } else {
+      data = { people: [], transactions: [] };
       save();
     }
 
@@ -71,7 +77,11 @@ function listen() {
 window.createProject = async function () {
 
   const name = document.getElementById("newProject").value.trim();
-  if (!name) return;
+
+  if (!name) {
+    alert("Escribe un nombre de proyecto");
+    return;
+  }
 
   currentProject = name;
 
@@ -80,22 +90,45 @@ window.createProject = async function () {
     transactions: []
   });
 
-  loadProjects();
-  listen();
+  await loadProjects();
+
+  document.getElementById("projectSelect").value = name;
+
+  enableApp();
+  connectProject();
 };
 
 document.getElementById("projectSelect").addEventListener("change", (e) => {
+
   currentProject = e.target.value;
-  listen();
+
+  if (!currentProject) return;
+
+  enableApp();
+  connectProject();
 });
 
+function enableApp() {
+
+  document.querySelectorAll(".admin").forEach(e => {
+    e.classList.remove("hidden");
+  });
+}
+
 window.login = function () {
+
+  if (!currentProject) {
+    alert("Primero selecciona un proyecto");
+    return;
+  }
+
   const pass = document.getElementById("adminPass").value;
 
   if (pass === ADMIN_PASSWORD) {
     role = "admin";
     document.getElementById("roleLabel").textContent = "Modo: 👑 Admin";
-    document.querySelectorAll(".admin").forEach(e => e.classList.remove("hidden"));
+  } else {
+    alert("Clave incorrecta");
   }
 };
 
@@ -104,6 +137,7 @@ function isAdmin() {
 }
 
 window.addPerson = function () {
+
   if (!isAdmin()) return;
 
   const name = document.getElementById("personName").value.trim();
@@ -114,6 +148,7 @@ window.addPerson = function () {
 };
 
 window.deletePerson = function (index) {
+
   if (!isAdmin()) return;
 
   const name = data.people[index];
@@ -125,6 +160,7 @@ window.deletePerson = function (index) {
 };
 
 window.addTransaction = function (type) {
+
   if (!isAdmin()) return;
 
   const person = document.getElementById(
@@ -144,6 +180,7 @@ window.addTransaction = function (type) {
 };
 
 window.deleteTransaction = function (index) {
+
   if (!isAdmin()) return;
 
   data.transactions.splice(index, 1);
@@ -158,6 +195,8 @@ function formatMoney(n) {
 }
 
 function updateUI() {
+
+  if (!currentProject) return;
 
   const peopleList = document.getElementById("peopleList");
   const incomeSelect = document.getElementById("incomePerson");
@@ -228,4 +267,3 @@ function updateUI() {
 }
 
 loadProjects();
-listen();
