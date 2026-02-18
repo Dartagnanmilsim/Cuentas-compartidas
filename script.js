@@ -1,303 +1,253 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+
 import {
   getFirestore,
-  doc,
-  setDoc,
-  onSnapshot,
   collection,
-  getDocs
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  addDoc,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBfMEoJ0yuS9EE1UC8cWH",
-  authDomain: "gastos-parche.firebaseapp.com",
-  projectId: "gastos-parche",
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_DOMAIN",
+  projectId: "TU_PROJECT_ID"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const ADMIN_PASSWORD = "1234";
+let currentProjectId = null;
+let isAdmin = false;
+const ADMIN_PASS = "1234";
 
-let role = "viewer";
-let currentProject = null;
-let data = { people: [], transactions: [] };
+const formatMoney = n =>
+  "$" + Number(n || 0).toLocaleString("es-CO");
 
-function ref(){ return doc(db,"budgets",currentProject); }
-
-async function save(){
-  if(!currentProject) return;
-  await setDoc(ref(),data);
-}
-
-async function loadProjects(){
-
-  const querySnapshot = await getDocs(collection(db,"budgets"));
-  const select = document.getElementById("projectSelect");
-
-  select.innerHTML = '<option value="">Seleccionar proyecto</option>';
-
-  querySnapshot.forEach(docSnap=>{
-    let opt=document.createElement("option");
-    opt.value=docSnap.id;
-    opt.textContent=docSnap.id;
-    select.appendChild(opt);
-  });
-}
-
-function connect(){
-
-  if(!currentProject) return;
-
-  onSnapshot(ref(), snap=>{
-    if(snap.exists()) data=snap.data();
-    updateUI();
-  });
-}
-
-document.getElementById("projectSelect").addEventListener("change",e=>{
-  currentProject=e.target.value;
-  connect();
-});
-
-window.login=function(){
-
-  let pass=document.getElementById("adminPass").value;
-
-  if(pass===ADMIN_PASSWORD){
-
-    role="admin";
-    document.getElementById("roleLabel").innerText="Modo 👑 Admin";
-
-    document.querySelectorAll(".admin")
-      .forEach(e=>e.classList.remove("hidden"));
+loginBtn.onclick = () => {
+  if(adminPass.value === ADMIN_PASS){
+    isAdmin = true;
+    modeText.innerText = "Modo 👑 Admin";
   }
 };
 
-function isAdmin(){ return role==="admin"; }
+createProjectBtn.onclick = async () => {
+  if(!isAdmin) return alert("Solo admin");
 
-window.createProject=async function(){
-
-  if(!isAdmin()) return;
-
-  let name=document.getElementById("newProject").value.trim();
+  const name = newProjectName.value;
   if(!name) return;
 
-  currentProject=name;
-
-  await setDoc(doc(db,"budgets",name),{
-    people:[],
-    transactions:[]
+  const docRef = await addDoc(collection(db,"projects"),{
+    name
   });
 
-  await loadProjects();
-
-  document.getElementById("projectSelect").value=name;
-
-  connect();
+  currentProjectId = docRef.id;
 };
 
-window.addPerson=function(){
+onSnapshot(collection(db,"projects"), snap=>{
+  projectSelect.innerHTML="";
+  snap.forEach(docu=>{
+    const opt = document.createElement("option");
+    opt.value = docu.id;
+    opt.innerText = docu.data().name;
+    projectSelect.appendChild(opt);
+  });
+});
 
-  if(!isAdmin()) return;
-
-  let name=document.getElementById("personName").value.trim();
-  if(!name) return;
-
-  data.people.push(name);
-  save();
+projectSelect.onchange = () => {
+  currentProjectId = projectSelect.value;
+  loadProject();
 };
 
-window.addTransaction=function(type){
+function loadProject(){
 
-  if(!isAdmin()) return;
+  const peopleRef = collection(db,"projects",currentProjectId,"people");
+  const incomeRef = collection(db,"projects",currentProjectId,"ingresos");
+  const expenseRef = collection(db,"projects",currentProjectId,"egresos");
+  const debtsRef = collection(db,"projects",currentProjectId,"debts");
 
-  let person=document.getElementById(
-    type==="income"?"incomePerson":"expensePerson"
-  ).value;
+  onSnapshot(peopleRef, snap=>{
+    peopleList.innerHTML="";
+    incomePerson.innerHTML="";
+    expensePerson.innerHTML="";
+    debtFrom.innerHTML="";
+    debtTo.innerHTML="";
 
-  let amount=parseFloat(
-    document.getElementById(
-      type==="income"?"incomeAmount":"expenseAmount"
-    ).value
-  );
+    snap.forEach(docu=>{
+      const name = docu.data().name;
 
-  if(!person || !amount) return;
+      const div = document.createElement("div");
+      div.className="item";
 
-  data.transactions.push({
-    person,
-    amount,
-    type,
-    date: new Date().toISOString()
-  });
+      div.innerHTML = `
+        <span>🤙 ${name}</span>
+        ${isAdmin ? `<button class="btn-delete">✕</button>`:""}
+      `;
 
-  save();
-};
-
-function formatMoney(n){
-  return n.toLocaleString("es-CO",{minimumFractionDigits:2});
-}
-
-function calculateBalances(){
-
-  let balances={};
-
-  data.people.forEach(p=>balances[p]=0);
-
-  data.transactions.forEach(t=>{
-    if(t.type==="income") balances[t.person]+=t.amount;
-    else balances[t.person]-=t.amount;
-  });
-
-  return balances;
-}
-
-function calculateDebts(balances){
-
-  let result=[];
-
-  let creditors=[];
-  let debtors=[];
-
-  Object.entries(balances).forEach(([p,v])=>{
-    if(v>0) creditors.push({p,v});
-    if(v<0) debtors.push({p,v});
-  });
-
-  debtors.forEach(d=>{
-    creditors.forEach(c=>{
-      if(d.v===0) return;
-
-      let pay=Math.min(c.v,Math.abs(d.v));
-
-      if(pay>0){
-        result.push(`${d.p} debe $${formatMoney(pay)} a ${c.p}`);
-        c.v-=pay;
-        d.v+=pay;
+      if(isAdmin){
+        div.querySelector("button").onclick =
+          () => deleteDoc(docu.ref);
       }
+
+      peopleList.appendChild(div);
+
+      [incomePerson,expensePerson,debtFrom,debtTo]
+        .forEach(sel=>{
+          const opt=document.createElement("option");
+          opt.value=name;
+          opt.innerText=name;
+          sel.appendChild(opt);
+        });
     });
   });
 
-  return result;
-}
+  onSnapshot(incomeRef, snap=>{
+    let total=0;
+    incomeList.innerHTML="";
 
-function showDetail(person,type){
+    snap.forEach(docu=>{
+      const d = docu.data();
+      total+=Number(d.amount);
 
-  let list=data.transactions
-    .filter(t=>t.person===person && t.type===type);
+      const div=document.createElement("div");
+      div.className="item";
 
-  let html="";
+      const date = d.date?.toDate?.().toLocaleDateString() || "";
 
-  list.forEach(t=>{
-    html+=`
-      <div>
-        $${formatMoney(t.amount)} — ${new Date(t.date).toLocaleDateString()}
-      </div>
-    `;
+      div.innerHTML=`
+        <span>🍻 ${d.person} - ${formatMoney(d.amount)} (${date})</span>
+        ${isAdmin?`<button class="btn-delete">✕</button>`:""}
+      `;
+
+      if(isAdmin){
+        div.querySelector("button").onclick=
+          ()=>deleteDoc(docu.ref);
+      }
+
+      incomeList.appendChild(div);
+    });
+
+    incomeTotal.innerText=formatMoney(total);
+    updateBalance();
+    updateRanking();
   });
 
-  document.getElementById("modalTitle").innerText=`Detalle ${person}`;
-  document.getElementById("modalBody").innerHTML=html;
+  onSnapshot(expenseRef, snap=>{
+    let total=0;
+    expenseList.innerHTML="";
 
-  document.getElementById("modal").classList.remove("hidden");
+    snap.forEach(docu=>{
+      const d = docu.data();
+      total+=Number(d.amount);
+
+      const div=document.createElement("div");
+      div.className="item";
+
+      const date = d.date?.toDate?.().toLocaleDateString() || "";
+
+      div.innerHTML=`
+        <span>💩 ${d.person} - ${formatMoney(d.amount)} (${date})</span>
+        ${isAdmin?`<button class="btn-delete">✕</button>`:""}
+      `;
+
+      if(isAdmin){
+        div.querySelector("button").onclick=
+          ()=>deleteDoc(docu.ref);
+      }
+
+      expenseList.appendChild(div);
+    });
+
+    expenseTotal.innerText=formatMoney(total);
+    updateBalance();
+  });
+
+  onSnapshot(debtsRef, snap=>{
+    debtsList.innerHTML="";
+
+    snap.forEach(docu=>{
+      const d = docu.data();
+
+      const div=document.createElement("div");
+      div.className="debt-item";
+
+      div.innerHTML=`
+        <span>💸 ${d.from} debe ${formatMoney(d.amount)} a ${d.to}</span>
+        ${isAdmin?`<button class="btn-delete">✕</button>`:""}
+      `;
+
+      if(isAdmin){
+        div.querySelector("button").onclick=
+          ()=>deleteDoc(docu.ref);
+      }
+
+      debtsList.appendChild(div);
+    });
+  });
 }
 
-window.closeModal=function(){
-  document.getElementById("modal").classList.add("hidden");
+addPersonBtn.onclick = async ()=>{
+  if(!isAdmin) return;
+  const name=personName.value;
+  if(!name) return;
+
+  await addDoc(collection(db,"projects",currentProjectId,"people"),{
+    name
+  });
+
+  personName.value="";
 };
 
-function updateUI(){
+addIncomeBtn.onclick = async ()=>{
+  if(!isAdmin) return;
 
-  if(!currentProject) return;
-
-  let peopleList=document.getElementById("peopleList");
-  let incomeSelect=document.getElementById("incomePerson");
-  let expenseSelect=document.getElementById("expensePerson");
-
-  peopleList.innerHTML="";
-  incomeSelect.innerHTML="";
-  expenseSelect.innerHTML="";
-
-  data.people.forEach(p=>{
-
-    peopleList.innerHTML+=`<div class="people-item">${p}</div>`;
-
-    let opt=document.createElement("option");
-    opt.value=p;
-    opt.textContent=p;
-
-    incomeSelect.appendChild(opt.cloneNode(true));
-    expenseSelect.appendChild(opt.cloneNode(true));
+  await addDoc(collection(db,"projects",currentProjectId,"ingresos"),{
+    person:incomePerson.value,
+    amount:Number(incomeAmount.value),
+    date:serverTimestamp()
   });
 
-  let totalIncome=0;
-  let totalExpense=0;
-
-  let ranking={};
-
-  data.transactions.forEach(t=>{
-
-    if(!ranking[t.person]) ranking[t.person]=0;
-    if(t.type==="income") ranking[t.person]+=t.amount;
-
-    if(t.type==="income") totalIncome+=t.amount;
-    else totalExpense+=t.amount;
-  });
-
-  document.getElementById("totalIncome").innerText=formatMoney(totalIncome);
-  document.getElementById("totalExpense").innerText=formatMoney(totalExpense);
-
-  let balance=totalIncome-totalExpense;
-  document.getElementById("balance").innerText="$ "+formatMoney(balance);
-
-  updateRanking(ranking);
-
-  let balances=calculateBalances();
-  let debts=calculateDebts(balances);
-
-  let debtsDiv=document.getElementById("debts");
-  debtsDiv.innerHTML="";
-
-  debts.forEach(d=>{
-    debtsDiv.innerHTML+=`<div class="item">${d}</div>`;
-  });
-}
-
-function updateRanking(ranking){
-
-  let div=document.getElementById("ranking");
-
-  div.innerHTML="";
-
-  let sorted=Object.entries(ranking)
-    .sort((a,b)=>b[1]-a[1]);
-
-  sorted.forEach((r,i)=>{
-
-    let medal=["🥇","🥈","🥉"][i] || "🎖️";
-
-    div.innerHTML+=`
-      <div class="item">
-        ${medal} ${r[0]} — $${formatMoney(r[1])}
-      </div>
-    `;
-  });
-}
-
-window.shareWhatsApp=function(){
-
-  let text="🍻 Gastos del Parche\n";
-
-  data.people.forEach(p=>{
-    let total=data.transactions
-      .filter(t=>t.person===p && t.type==="income")
-      .reduce((a,b)=>a+b.amount,0);
-
-    text+=`${p}: $${formatMoney(total)}\n`;
-  });
-
-  let url=`https://wa.me/?text=${encodeURIComponent(text)}`;
-  window.open(url);
+  incomeAmount.value="";
 };
 
-loadProjects();
+addExpenseBtn.onclick = async ()=>{
+  if(!isAdmin) return;
+
+  await addDoc(collection(db,"projects",currentProjectId,"egresos"),{
+    person:expensePerson.value,
+    amount:Number(expenseAmount.value),
+    date:serverTimestamp()
+  });
+
+  expenseAmount.value="";
+};
+
+addDebtBtn.onclick = async ()=>{
+  if(!isAdmin) return;
+
+  await addDoc(collection(db,"projects",currentProjectId,"debts"),{
+    from:debtFrom.value,
+    to:debtTo.value,
+    amount:Number(debtAmount.value),
+    date:serverTimestamp()
+  });
+
+  debtAmount.value="";
+};
+
+function updateBalance(){
+  const inc = Number(incomeTotal.innerText.replace(/\D/g,'')) || 0;
+  const exp = Number(expenseTotal.innerText.replace(/\D/g,'')) || 0;
+  balanceTotal.innerText=formatMoney(inc-exp);
+}
+
+function updateRanking(){
+  ranking.innerHTML="🏆 Próximamente ranking dinámico";
+}
+
+shareBtn.onclick=()=>{
+  const text = `Balance actual ${balanceTotal.innerText}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
+};
