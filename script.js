@@ -11,7 +11,7 @@ setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 
-// 🔥 CONFIG FIREBASE
+// 🔥 FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyBfMEoJ0yuS9EE1UC8cWHpqjgSL0bphcqs",
   authDomain: "gastos-parche.firebaseapp.com",
@@ -25,8 +25,14 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 
-let admin=false;
-let proyectoActual=null;
+let admin = false;
+let proyectoActual = null;
+
+// 🔥 unsubscribe listeners
+let unsubPersonas = null;
+let unsubIngresos = null;
+let unsubGastos = null;
+let unsubDeudas = null;
 
 
 function formato(n){
@@ -36,18 +42,15 @@ return "$ " + Number(n || 0).toLocaleString("es-CO");
 
 // ================= ADMIN =================
 
-window.loginAdmin=()=>{
+window.loginAdmin = () => {
 
-const pass=document.getElementById("claveAdmin").value;
+const pass = document.getElementById("claveAdmin").value;
 
-if(pass==="1234"){
-admin=true;
-document.getElementById("modoTexto").innerText="Modo 👑 Admin";
+if(pass === "1234"){
+admin = true;
+document.getElementById("modoTexto").innerText = "Modo 👑 Admin";
 
-/* 🔥 FIX: recargar datos para mostrar botones eliminar */
-if(proyectoActual){
-cargarDatos();
-}
+if(proyectoActual) cargarDatos();
 
 }else{
 alert("Clave incorrecta");
@@ -58,20 +61,17 @@ alert("Clave incorrecta");
 
 // ================= PROYECTOS =================
 
-const proyectoSelect=document.getElementById("proyectoSelect");
+const proyectoSelect = document.getElementById("proyectoSelect");
 
 onSnapshot(collection(db,"proyectos"),snap=>{
 
 proyectoSelect.innerHTML="";
 
 snap.forEach(docu=>{
-
 const op=document.createElement("option");
 op.value=docu.id;
 op.textContent=docu.id;
-
 proyectoSelect.appendChild(op);
-
 });
 
 if(!proyectoActual && proyectoSelect.options.length>0){
@@ -82,7 +82,7 @@ cargarDatos();
 });
 
 
-window.crearProyecto=async()=>{
+window.crearProyecto = async () => {
 
 if(!admin) return alert("Solo admin");
 
@@ -94,7 +94,7 @@ await setDoc(doc(db,"proyectos",nombre),{nombre});
 };
 
 
-window.eliminarProyecto=async()=>{
+window.eliminarProyecto = async () => {
 
 if(!admin) return;
 
@@ -103,15 +103,15 @@ await deleteDoc(doc(db,"proyectos",proyectoActual));
 };
 
 
-proyectoSelect.onchange=()=>{
-proyectoActual=proyectoSelect.value;
+proyectoSelect.onchange = () => {
+proyectoActual = proyectoSelect.value;
 cargarDatos();
 };
 
 
 // ================= PERSONAS =================
 
-window.agregarPersona=async()=>{
+window.agregarPersona = async () => {
 
 if(!admin) return;
 
@@ -128,7 +128,7 @@ nombre
 
 // ================= INGRESOS =================
 
-window.agregarIngreso=async()=>{
+window.agregarIngreso = async () => {
 
 if(!admin) return;
 
@@ -146,7 +146,7 @@ monto:Number(monto)
 
 // ================= GASTOS =================
 
-window.agregarGasto=async()=>{
+window.agregarGasto = async () => {
 
 if(!admin) return;
 
@@ -164,7 +164,7 @@ monto:Number(monto)
 
 // ================= DEUDAS =================
 
-window.agregarDeuda=async()=>{
+window.agregarDeuda = async () => {
 
 if(!admin) return;
 
@@ -184,7 +184,7 @@ monto:Number(monto)
 
 // ================= WHATSAPP =================
 
-window.compartirWhatsApp=()=>{
+window.compartirWhatsApp = () => {
 
 const texto=`Balance actual del parche: ${document.getElementById("balance").innerText}`;
 
@@ -195,10 +195,23 @@ window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`);
 
 // ================= CARGAR DATOS =================
 
+function limpiarListeners(){
+
+if(unsubPersonas) unsubPersonas();
+if(unsubIngresos) unsubIngresos();
+if(unsubGastos) unsubGastos();
+if(unsubDeudas) unsubDeudas();
+
+}
+
+
 function cargarDatos(){
 
+limpiarListeners();
+
+
 // PERSONAS
-onSnapshot(collection(db,"personas"),snap=>{
+unsubPersonas = onSnapshot(collection(db,"personas"),snap=>{
 
 const lista=document.getElementById("listaPersonas");
 
@@ -248,7 +261,7 @@ sel.appendChild(op);
 
 
 // INGRESOS
-onSnapshot(collection(db,"ingresos"),snap=>{
+unsubIngresos = onSnapshot(collection(db,"ingresos"),snap=>{
 
 let total=0;
 const lista=document.getElementById("listaIngresos");
@@ -292,7 +305,7 @@ actualizarRanking(rankingTemp);
 
 
 // GASTOS
-onSnapshot(collection(db,"gastos"),snap=>{
+unsubGastos = onSnapshot(collection(db,"gastos"),snap=>{
 
 let total=0;
 const lista=document.getElementById("listaGastos");
@@ -332,7 +345,7 @@ actualizarBalance();
 
 
 // DEUDAS
-onSnapshot(collection(db,"deudas"),snap=>{
+unsubDeudas = onSnapshot(collection(db,"deudas"),snap=>{
 
 const lista=document.getElementById("listaDeudas");
 lista.innerHTML="";
