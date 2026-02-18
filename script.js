@@ -45,7 +45,7 @@ async function loadProjects() {
   const querySnapshot = await getDocs(collection(db, "budgets"));
 
   const select = document.getElementById("projectSelect");
-  select.innerHTML = '<option value="">Seleccionar...</option>';
+  select.innerHTML = '<option value="">Seleccionar proyecto...</option>';
 
   querySnapshot.forEach((docSnap) => {
     const option = document.createElement("option");
@@ -74,7 +74,32 @@ function connectProject() {
   });
 }
 
+window.login = function () {
+
+  const pass = document.getElementById("adminPass").value;
+
+  if (pass === ADMIN_PASSWORD) {
+
+    role = "admin";
+    document.getElementById("roleLabel").textContent = "Modo: 👑 Admin";
+
+    alert("Modo administrador activado");
+
+  } else {
+    alert("Clave incorrecta");
+  }
+};
+
+function isAdmin() {
+  return role === "admin";
+}
+
 window.createProject = async function () {
+
+  if (!isAdmin()) {
+    alert("Solo el administrador puede crear proyectos");
+    return;
+  }
 
   const name = document.getElementById("newProject").value.trim();
 
@@ -94,8 +119,9 @@ window.createProject = async function () {
 
   document.getElementById("projectSelect").value = name;
 
-  enableApp();
   connectProject();
+
+  alert("Proyecto creado ✅");
 };
 
 document.getElementById("projectSelect").addEventListener("change", (e) => {
@@ -104,37 +130,8 @@ document.getElementById("projectSelect").addEventListener("change", (e) => {
 
   if (!currentProject) return;
 
-  enableApp();
   connectProject();
 });
-
-function enableApp() {
-
-  document.querySelectorAll(".admin").forEach(e => {
-    e.classList.remove("hidden");
-  });
-}
-
-window.login = function () {
-
-  if (!currentProject) {
-    alert("Primero selecciona un proyecto");
-    return;
-  }
-
-  const pass = document.getElementById("adminPass").value;
-
-  if (pass === ADMIN_PASSWORD) {
-    role = "admin";
-    document.getElementById("roleLabel").textContent = "Modo: 👑 Admin";
-  } else {
-    alert("Clave incorrecta");
-  }
-};
-
-function isAdmin() {
-  return role === "admin";
-}
 
 window.addPerson = function () {
 
