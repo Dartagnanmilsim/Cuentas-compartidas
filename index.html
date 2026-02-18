@@ -2,15 +2,30 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Control de Grupo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Control de Presupuestos</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>💰 Control del Grupo</h1>
+<h1>💰 Control de Presupuestos</h1>
 
 <div class="card">
+  <h2>🔐 Acceso</h2>
+  <input type="password" id="adminPass" placeholder="Clave administrador">
+  <button onclick="login()">Ingresar</button>
+  <p id="roleLabel">Modo: Consulta</p>
+</div>
+
+<div class="card">
+  <h2>📂 Presupuestos</h2>
+  <input type="text" id="budgetName" placeholder="Nombre presupuesto">
+  <button onclick="addBudget()">Crear</button>
+
+  <select id="budgetSelect" onchange="changeBudget()"></select>
+</div>
+
+<div class="card admin">
   <h2>👤 Personas</h2>
   <input type="text" id="personName" placeholder="Nombre">
   <button onclick="addPerson()">Agregar Persona</button>
@@ -19,34 +34,32 @@
 
 <div class="grid">
 
-  <div class="card">
-    <h2>💵 Ingresos / Aportes</h2>
+  <div class="card admin">
+    <h2>💵 Ingresos</h2>
 
     <select id="incomePerson"></select>
     <input type="number" id="incomeAmount" placeholder="Monto">
-
-    <button onclick="addTransaction('income')">Agregar Ingreso</button>
+    <button onclick="addTransaction('income')">Agregar</button>
 
     <div id="incomeList"></div>
-    <h3>Total Ingresos: <span id="totalIncome">0</span></h3>
+    <h3>Total: <span id="totalIncome">0</span></h3>
   </div>
 
-  <div class="card">
+  <div class="card admin">
     <h2>🧾 Gastos</h2>
 
     <select id="expensePerson"></select>
     <input type="number" id="expenseAmount" placeholder="Monto">
-
-    <button onclick="addTransaction('expense')">Agregar Gasto</button>
+    <button onclick="addTransaction('expense')">Agregar</button>
 
     <div id="expenseList"></div>
-    <h3>Total Gastos: <span id="totalExpense">0</span></h3>
+    <h3>Total: <span id="totalExpense">0</span></h3>
   </div>
 
 </div>
 
 <div class="card total">
-  <h2>📊 Balance General</h2>
+  <h2>📊 Balance</h2>
   <h3 id="balance">0</h3>
 </div>
 
