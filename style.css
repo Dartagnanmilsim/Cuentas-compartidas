@@ -44,6 +44,42 @@ button {
   border-radius: 8px;
 }
 
+/* fila proyecto */
+.project-row {
+  display: flex;
+  gap: 6px;
+}
+
+.project-row select {
+  flex: 1;
+}
+
+/* eliminar proyecto */
+.btn-delete-project {
+  width: 50px;
+  background: #ff4d4d;
+}
+
+.btn-delete-project:hover {
+  background: #ff0000;
+}
+
+/* lista personas */
+.people-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.people-name {
+  display: confirm;
+  align-items: center;
+  gap: 6px;
+}
+
+/* items ingresos/gastos */
 .item {
   display: flex;
   justify-content: space-between;
@@ -52,13 +88,17 @@ button {
   border-bottom: 1px solid #eee;
 }
 
-/* BOTÓN ELIMINAR MINIMALISTA */
+/* botón eliminar minimalista */
 .btn-delete {
   background: transparent;
   border: none;
   color: #ff4d4d;
-  font-size: 16px;
+  font-size: 18px;
   cursor: pointer;
+}
+
+.btn-delete:hover {
+  color: #ff0000;
 }
 
 .total {
