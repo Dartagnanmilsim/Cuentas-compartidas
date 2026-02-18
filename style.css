@@ -17,18 +17,6 @@ h1 {
   box-shadow: 0 3px 10px rgba(0,0,0,0.08);
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-}
-
-@media (min-width: 700px) {
-  .grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
 input, select, button {
   width: 100%;
   box-sizing: border-box;
@@ -45,6 +33,67 @@ button {
   font-weight: bold;
 }
 
+/* GRID */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 700px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* PERSONAS */
+.people-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fafafa;
+  padding: 10px 12px;
+  border-radius: 10px;
+  margin-top: 8px;
+  border: 1px solid #eee;
+}
+
+.people-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+}
+
+/* TRANSACCIONES */
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fafafa;
+  padding: 10px 12px;
+  border-radius: 10px;
+  margin-top: 8px;
+  border: 1px solid #eee;
+}
+
+/* BOTÓN ELIMINAR */
+.btn-delete {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: #ffe5e5;
+  color: #ff4d4d;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btn-delete:hover {
+  background: #ff4d4d;
+  color: white;
+}
+
 /* PROYECTO */
 .project-row {
   display: flex;
@@ -58,57 +107,6 @@ button {
 .btn-delete-project {
   width: 50px;
   background: #ff4d4d;
-}
-
-/* LISTA PERSONAS */
-#peopleList {
-  list-style: none;
-  padding: 0;
-  margin: 10px 0 0 0;
-}
-
-.people-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.people-name {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 16px;
-}
-
-/* ITEMS INGRESOS/GASTOS */
-.item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-/* BOTÓN ELIMINAR */
-.btn-delete {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: none;
-  background: #ffe5e5;
-  color: #ff4d4d;
-  font-size: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-delete:hover {
-  background: #ff4d4d;
-  color: white;
 }
 
 .total {
