@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Gastos del Parche</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gastos del Parche</title>
+<link rel="stylesheet" href="style.css">
+
+<script type="module" src="script.js"></script>
 </head>
 
 <body>
@@ -12,91 +14,102 @@
 <h1>🍻 Gastos del Parche</h1>
 
 <div class="card">
-  <h2>📁 Proyecto</h2>
 
-  <select id="projectSelect"></select>
+<h2>📁 Proyecto</h2>
 
-  <input id="newProjectName" placeholder="Nuevo proyecto">
+<select id="proyectoSelect"></select>
 
-  <button id="createProjectBtn">Crear</button>
+<input id="nuevoProyecto" placeholder="Nuevo proyecto">
+
+<button onclick="crearProyecto()">Crear</button>
+
+<button onclick="eliminarProyecto()" class="danger">Eliminar Proyecto</button>
+
 </div>
 
 
 <div class="card">
-  <h2>🔐 Acceso Admin</h2>
 
-  <input id="adminPass" type="password" placeholder="Clave admin">
+<h2>🔐 Acceso Admin</h2>
 
-  <button id="loginBtn">Entrar</button>
+<input type="password" id="claveAdmin" placeholder="Clave admin">
 
-  <p id="modeText">Modo 👀 Solo ver</p>
+<button onclick="loginAdmin()">Entrar</button>
+
+<p id="modoTexto">Modo 👀 Solo ver</p>
+
 </div>
 
 
 <div class="card">
-  <h2>🤙 El Combo</h2>
 
-  <input id="personName" placeholder="Nombre">
+<h2>👍 El Combo</h2>
 
-  <button id="addPersonBtn">Agregar</button>
+<input id="nombreInput" placeholder="Nombre">
 
-  <div id="peopleList"></div>
+<button onclick="agregarPersona()">Agregar</button>
+
+<div id="listaPersonas"></div>
+
 </div>
 
 
 <div class="card">
-  <h2>🍻 Quién puso</h2>
 
-  <select id="incomePerson"></select>
+<h2>🍻 Quién puso</h2>
 
-  <input id="incomeAmount" type="number" placeholder="Monto">
+<select id="selectIngreso"></select>
+<input id="montoIngreso" placeholder="Monto">
+<button onclick="agregarIngreso()">Agregar</button>
 
-  <button id="addIncomeBtn">Agregar</button>
+<div id="listaIngresos"></div>
 
-  <div id="incomeList"></div>
+<h3>Total: <span id="totalIngresos">0</span></h3>
 
-  <h3>Total: <span id="incomeTotal">$0</span></h3>
 </div>
 
 
 <div class="card">
-  <h2>💩 En qué se fue</h2>
 
-  <select id="expensePerson"></select>
+<h2>💩 En qué se fue</h2>
 
-  <input id="expenseAmount" type="number" placeholder="Monto">
+<select id="selectGasto"></select>
+<input id="montoGasto" placeholder="Monto">
+<button onclick="agregarGasto()">Agregar</button>
 
-  <button id="addExpenseBtn">Agregar</button>
+<div id="listaGastos"></div>
 
-  <div id="expenseList"></div>
+<h3>Total: <span id="totalGastos">0</span></h3>
 
-  <h3>Total: <span id="expenseTotal">$0</span></h3>
 </div>
 
 
-<div class="card highlight">
-  <h2>🔥 Cómo vamos</h2>
+<div class="card resumen">
 
-  <h1 id="balanceTotal">$0</h1>
+<h2>🔥 Cómo vamos</h2>
+<h1 id="balance">0</h1>
 
-  <button id="shareBtn">📲 Compartir WhatsApp</button>
+<button onclick="compartirWhatsApp()">📲 Compartir WhatsApp</button>
+
 </div>
 
 
 <div class="card">
-  <h2>💸 Quién debe a quién</h2>
 
-  <select id="debtFrom"></select>
-  <select id="debtTo"></select>
+<h2>🏆 Ranking del Parche</h2>
 
-  <input id="debtAmount" type="number" placeholder="Monto">
+<div id="ranking"></div>
 
-  <button id="addDebtBtn">Agregar deuda</button>
-
-  <div id="debtsList"></div>
 </div>
 
-<script type="module" src="app.js"></script>
+
+<div class="card">
+
+<h2>💸 Deudas</h2>
+
+<div id="deudas"></div>
+
+</div>
 
 </body>
 </html>
