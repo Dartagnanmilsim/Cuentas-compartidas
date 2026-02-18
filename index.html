@@ -13,54 +13,82 @@
 
 <div class="card">
   <h2>📁 Proyecto</h2>
+
   <select id="projectSelect"></select>
+
   <input id="newProjectName" placeholder="Nuevo proyecto">
+
   <button id="createProjectBtn">Crear</button>
 </div>
 
+
 <div class="card">
   <h2>🔐 Acceso Admin</h2>
+
   <input id="adminPass" type="password" placeholder="Clave admin">
+
   <button id="loginBtn">Entrar</button>
+
   <p id="modeText">Modo 👀 Solo ver</p>
 </div>
 
+
 <div class="card">
   <h2>🤙 El Combo</h2>
+
   <input id="personName" placeholder="Nombre">
+
   <button id="addPersonBtn">Agregar</button>
+
   <div id="peopleList"></div>
 </div>
 
+
 <div class="card">
   <h2>🍻 Quién puso</h2>
+
   <select id="incomePerson"></select>
+
   <input id="incomeAmount" type="number" placeholder="Monto">
+
   <button id="addIncomeBtn">Agregar</button>
+
   <div id="incomeList"></div>
-  <h3>Total: <span id="incomeTotal">0</span></h3>
+
+  <h3>Total: <span id="incomeTotal">$0</span></h3>
 </div>
+
 
 <div class="card">
   <h2>💩 En qué se fue</h2>
+
   <select id="expensePerson"></select>
+
   <input id="expenseAmount" type="number" placeholder="Monto">
+
   <button id="addExpenseBtn">Agregar</button>
+
   <div id="expenseList"></div>
-  <h3>Total: <span id="expenseTotal">0</span></h3>
+
+  <h3>Total: <span id="expenseTotal">$0</span></h3>
 </div>
+
 
 <div class="card highlight">
   <h2>🔥 Cómo vamos</h2>
+
   <h1 id="balanceTotal">$0</h1>
+
   <button id="shareBtn">📲 Compartir WhatsApp</button>
 </div>
+
 
 <div class="card">
   <h2>💸 Quién debe a quién</h2>
 
   <select id="debtFrom"></select>
   <select id="debtTo"></select>
+
   <input id="debtAmount" type="number" placeholder="Monto">
 
   <button id="addDebtBtn">Agregar deuda</button>
@@ -68,11 +96,7 @@
   <div id="debtsList"></div>
 </div>
 
-<div class="card">
-  <h2>🏆 Ranking del Parche</h2>
-  <div id="ranking"></div>
-</div>
-
 <script type="module" src="app.js"></script>
+
 </body>
 </html>
