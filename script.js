@@ -11,7 +11,7 @@ setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 
-// 🔥 FIREBASE
+// 🔥 FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyBfMEoJ0yuS9EE1UC8cWHpqjgSL0bphcqs",
   authDomain: "gastos-parche.firebaseapp.com",
@@ -24,34 +24,20 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-
-// 🎨 COLORES
-const colores = [
-"#ff4757",
-"#1e90ff",
-"#2ed573",
-"#e84393",
-"#ffa502",
-"#00cec9",
-"#fd9644",
-"#6c5ce7"
-];
-
-// 🎉 EMOJIS FIESTA
-const emojis = [
-"🍻","🍺","🎉","🕺","💃","😎","🔥","🚀","🥳","🍹"
-];
+let admin=false;
+let proyectoActual=null;
 
 
-let admin = false;
-let proyectoActual = null;
+// 🔴 CONTROL LISTENERS ACTIVOS
+let unsubPersonas=null;
+let unsubIngresos=null;
+let unsubGastos=null;
+let unsubDeudas=null;
 
-let unsubPersonas = null;
-let unsubIngresos = null;
-let unsubGastos = null;
-let unsubDeudas = null;
 
-let mapaPersonas = {};
+// 🎨 COLORES PERSONAS
+const colores=["#e74c3c","#3498db","#2ecc71","#9b59b6","#f39c12","#1abc9c"];
+const colorMap={};
 
 
 function formato(n){
@@ -59,18 +45,15 @@ return "$ " + Number(n || 0).toLocaleString("es-CO");
 }
 
 
-// ================= ADMIN =================
+// ================= ADMIN
+window.loginAdmin=()=>{
 
-window.loginAdmin = () => {
+const pass=document.getElementById("claveAdmin").value;
 
-const pass = document.getElementById("claveAdmin").value;
-
-if(pass === "1234"){
-admin = true;
-document.getElementById("modoTexto").innerText = "Modo 👑 Admin";
-
-if(proyectoActual) cargarDatos();
-
+if(pass==="1234"){
+admin=true;
+document.getElementById("modoTexto").innerText="Modo 👑 Admin";
+cargarDatos();
 }else{
 alert("Clave incorrecta");
 }
@@ -78,9 +61,8 @@ alert("Clave incorrecta");
 };
 
 
-// ================= PROYECTOS =================
-
-const proyectoSelect = document.getElementById("proyectoSelect");
+// ================= PROYECTOS
+const proyectoSelect=document.getElementById("proyectoSelect");
 
 onSnapshot(collection(db,"proyectos"),snap=>{
 
@@ -101,7 +83,7 @@ cargarDatos();
 });
 
 
-window.crearProyecto = async () => {
+window.crearProyecto=async()=>{
 
 if(!admin) return alert("Solo admin");
 
@@ -113,7 +95,7 @@ await setDoc(doc(db,"proyectos",nombre),{nombre});
 };
 
 
-window.eliminarProyecto = async () => {
+window.eliminarProyecto=async()=>{
 
 if(!admin) return;
 
@@ -122,37 +104,30 @@ await deleteDoc(doc(db,"proyectos",proyectoActual));
 };
 
 
-proyectoSelect.onchange = () => {
-proyectoActual = proyectoSelect.value;
+proyectoSelect.onchange=()=>{
+proyectoActual=proyectoSelect.value;
 cargarDatos();
 };
 
 
-// ================= PERSONAS =================
-
-window.agregarPersona = async () => {
+// ================= PERSONAS
+window.agregarPersona=async()=>{
 
 if(!admin) return;
 
 const nombre=document.getElementById("nombrePersona").value;
 if(!nombre) return;
 
-const color = colores[Math.floor(Math.random()*colores.length)];
-const emoji = emojis[Math.floor(Math.random()*emojis.length)];
-
 await addDoc(collection(db,"personas"),{
 proyecto:proyectoActual,
-nombre,
-color,
-emoji
+nombre
 });
 
 };
 
 
-// ================= INGRESOS =================
-
-window.agregarIngreso = async () => {
+// ================= INGRESOS
+window.agregarIngreso=async()=>{
 
 if(!admin) return;
 
@@ -168,9 +143,8 @@ monto:Number(monto)
 };
 
 
-// ================= GASTOS =================
-
-window.agregarGasto = async () => {
+// ================= GASTOS
+window.agregarGasto=async()=>{
 
 if(!admin) return;
 
@@ -186,9 +160,8 @@ monto:Number(monto)
 };
 
 
-// ================= DEUDAS =================
-
-window.agregarDeuda = async () => {
+// ================= DEUDAS
+window.agregarDeuda=async()=>{
 
 if(!admin) return;
 
@@ -206,9 +179,8 @@ monto:Number(monto)
 };
 
 
-// ================= WHATSAPP =================
-
-window.compartirWhatsApp = () => {
+// ================= WHATSAPP NARCO EMPRESARIAL
+window.compartirWhatsApp=()=>{
 
 const ingresos=document.getElementById("totalIngresos").innerText;
 const gastos=document.getElementById("totalGastos").innerText;
@@ -216,16 +188,15 @@ const balance=document.getElementById("balance").innerText;
 
 let rankingTexto="";
 document.querySelectorAll("#ranking li").forEach(li=>{
-rankingTexto+="\n"+li.innerText;
+rankingTexto+=li.innerText+"\n";
 });
 
 let deudasTexto="";
 document.querySelectorAll("#listaDeudas li").forEach(li=>{
-deudasTexto+="\n"+li.innerText;
+deudasTexto+=li.innerText+"\n";
 });
 
-const texto=`
-🚬💰 *Reunión de Alto Nivel — Organización del Parche*
+const texto=`🚬💰 *Reunión de Alto Nivel — Organización del Parche*
 
 Caballeros:
 
@@ -236,10 +207,10 @@ Los números ya hablaron.
 📊 Balance del negocio: ${balance}
 
 🏆 Los que pusieron la cara por la empresa:
-${rankingTexto||"Sin registros"}
+${rankingTexto || "Sin movimientos"}
 
 🤝 Deudas internas:
-${deudasTexto||"Sin pendientes"}
+${deudasTexto || "Sin deudas registradas"}
 
 ⚖️ Decisión:
 La empresa sigue fuerte.
@@ -247,33 +218,25 @@ La caja está viva.
 La fiesta continúa.
 
 Firmado,
-La Junta 🍻😎
-`;
+La Junta 🍻😎`;
 
 window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`);
 
 };
 
 
-// ================= LISTENERS =================
+// ================= CARGAR DATOS
+function cargarDatos(){
 
-function limpiarListeners(){
-
+// 🔴 CANCELAR LISTENERS ANTERIORES
 if(unsubPersonas) unsubPersonas();
 if(unsubIngresos) unsubIngresos();
 if(unsubGastos) unsubGastos();
 if(unsubDeudas) unsubDeudas();
 
-}
 
-
-function cargarDatos(){
-
-limpiarListeners();
-
-
-// PERSONAS
-unsubPersonas=onSnapshot(collection(db,"personas"),snap=>{
+// ================= PERSONAS
+unsubPersonas = onSnapshot(collection(db,"personas"),snap=>{
 
 const lista=document.getElementById("listaPersonas");
 
@@ -288,30 +251,36 @@ s2.innerHTML="";
 s3.innerHTML="";
 s4.innerHTML="";
 
-mapaPersonas={};
+let i=0;
 
 snap.forEach(docu=>{
 
 const d=docu.data();
 if(d.proyecto!==proyectoActual) return;
 
-mapaPersonas[d.nombre]=d;
+if(!colorMap[d.nombre]){
+colorMap[d.nombre]=colores[i%colores.length];
+i++;
+}
 
 const li=document.createElement("li");
 
-li.innerHTML=`
-<span style="color:${d.color};font-weight:bold">
-${d.emoji || "🎉"} ${d.nombre}
-</span>
-`;
+const span=document.createElement("span");
+span.textContent=d.nombre;
+span.style.color=colorMap[d.nombre];
+span.style.fontWeight="bold";
+
+li.appendChild(span);
 
 if(admin){
 const btn=document.createElement("button");
 btn.textContent="X";
 btn.className="delete-btn";
+
 btn.onclick=async()=>{
 await deleteDoc(doc(db,"personas",docu.id));
 };
+
 li.appendChild(btn);
 }
 
@@ -329,8 +298,8 @@ sel.appendChild(op);
 });
 
 
-// INGRESOS
-unsubIngresos=onSnapshot(collection(db,"ingresos"),snap=>{
+// ================= INGRESOS
+unsubIngresos = onSnapshot(collection(db,"ingresos"),snap=>{
 
 let total=0;
 const lista=document.getElementById("listaIngresos");
@@ -346,24 +315,14 @@ if(d.proyecto!==proyectoActual) return;
 total+=Number(d.monto);
 rankingTemp[d.persona]=(rankingTemp[d.persona]||0)+Number(d.monto);
 
-const persona=mapaPersonas[d.persona]||{};
-const color=persona.color||"#000";
-const emoji=persona.emoji||"🎉";
-
 const li=document.createElement("li");
-li.innerHTML=`
-<span style="color:${color};font-weight:bold">
-${emoji} ${d.persona}
-</span> → ${formato(d.monto)}
-`;
+li.innerHTML=`${d.persona} → ${formato(d.monto)}`;
 
 if(admin){
 const btn=document.createElement("button");
 btn.textContent="X";
 btn.className="delete-btn";
-btn.onclick=async()=>{
-await deleteDoc(doc(db,"ingresos",docu.id));
-};
+btn.onclick=async()=> await deleteDoc(doc(db,"ingresos",docu.id));
 li.appendChild(btn);
 }
 
@@ -379,8 +338,8 @@ actualizarRanking(rankingTemp);
 });
 
 
-// GASTOS
-unsubGastos=onSnapshot(collection(db,"gastos"),snap=>{
+// ================= GASTOS
+unsubGastos = onSnapshot(collection(db,"gastos"),snap=>{
 
 let total=0;
 const lista=document.getElementById("listaGastos");
@@ -393,24 +352,14 @@ if(d.proyecto!==proyectoActual) return;
 
 total+=Number(d.monto);
 
-const persona=mapaPersonas[d.persona]||{};
-const color=persona.color||"#000";
-const emoji=persona.emoji||"🎉";
-
 const li=document.createElement("li");
-li.innerHTML=`
-<span style="color:${color};font-weight:bold">
-${emoji} ${d.persona}
-</span> → ${formato(d.monto)}
-`;
+li.innerHTML=`${d.persona} → ${formato(d.monto)}`;
 
 if(admin){
 const btn=document.createElement("button");
 btn.textContent="X";
 btn.className="delete-btn";
-btn.onclick=async()=>{
-await deleteDoc(doc(db,"gastos",docu.id));
-};
+btn.onclick=async()=> await deleteDoc(doc(db,"gastos",docu.id));
 li.appendChild(btn);
 }
 
@@ -425,8 +374,8 @@ actualizarBalance();
 });
 
 
-// DEUDAS
-unsubDeudas=onSnapshot(collection(db,"deudas"),snap=>{
+// ================= DEUDAS
+unsubDeudas = onSnapshot(collection(db,"deudas"),snap=>{
 
 const lista=document.getElementById("listaDeudas");
 lista.innerHTML="";
@@ -436,24 +385,14 @@ snap.forEach(docu=>{
 const d=docu.data();
 if(d.proyecto!==proyectoActual) return;
 
-const persona=mapaPersonas[d.deudor]||{};
-const color=persona.color||"#000";
-const emoji=persona.emoji||"🎉";
-
 const li=document.createElement("li");
-li.innerHTML=`
-<span style="color:${color};font-weight:bold">
-${emoji} ${d.deudor}
-</span> debe ${formato(d.monto)} a ${d.acreedor}
-`;
+li.innerHTML=`${d.deudor} debe ${formato(d.monto)} a ${d.acreedor}`;
 
 if(admin){
 const btn=document.createElement("button");
 btn.textContent="X";
 btn.className="delete-btn";
-btn.onclick=async()=>{
-await deleteDoc(doc(db,"deudas",docu.id));
-};
+btn.onclick=async()=> await deleteDoc(doc(db,"deudas",docu.id));
 li.appendChild(btn);
 }
 
@@ -466,8 +405,7 @@ lista.appendChild(li);
 }
 
 
-// ================= BALANCE =================
-
+// ================= BALANCE
 function actualizarBalance(){
 
 const ingresos=Number(document.getElementById("totalIngresos").innerText.replace(/\D/g,""));
@@ -480,8 +418,7 @@ document.getElementById("balance").innerText=formato(total);
 }
 
 
-// ================= RANKING =================
-
+// ================= RANKING
 function actualizarRanking(data){
 
 const lista=document.getElementById("ranking");
@@ -493,17 +430,8 @@ Object.entries(data)
 
 const medalla=i===0?"🥇":i===1?"🥈":i===2?"🥉":"";
 
-const p=mapaPersonas[persona]||{};
-const color=p.color||"#000";
-const emoji=p.emoji||"🎉";
-
 const li=document.createElement("li");
-li.innerHTML=`
-${medalla}
-<span style="color:${color};font-weight:bold">
-${emoji} ${persona}
-</span> → ${formato(total)}
-`;
+li.textContent=`${medalla} ${persona} → ${formato(total)}`;
 
 lista.appendChild(li);
 
