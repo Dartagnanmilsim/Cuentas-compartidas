@@ -1,84 +1,52 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
 import {
   getFirestore,
   collection,
   addDoc,
   deleteDoc,
   doc,
-  onSnapshot
+  onSnapshot,
+  setDoc,
+  getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_DOMAIN",
-  projectId: "TU_PROJECT_ID"
+  apiKey: "AIzaSyBfMEoJ0yuS9EE1UC8cWHpqjgSL0bphcqs",
+  authDomain: "gastos-parche.firebaseapp.com",
+  projectId: "gastos-parche",
+  storageBucket: "gastos-parche.firebasestorage.app",
+  messagingSenderId: "558910304272",
+  appId: "1:558910304272:web:e9ae826d11a7865a8b9a95"
 };
-
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-
 let admin = false;
-let proyectoActual = localStorage.getItem("proyecto") || "";
+let proyectoActual = null;
 
-
-function formato(n) {
-  return "$" + Number(n).toLocaleString("es-CO");
+function formato(valor) {
+  return "$ " + Number(valor || 0).toLocaleString("es-CO");
 }
 
+/* ADMIN */
 
-window.loginAdmin = () => {
+window.loginAdmin = function () {
+  const pass = document.getElementById("adminPass").value;
 
-  const clave = document.getElementById("claveAdmin").value;
-
-  if (clave === "1234") {
+  if (pass === "1234") {
     admin = true;
     document.getElementById("modoTexto").innerText = "Modo 👑 Admin";
+    alert("Admin activado");
   } else {
     alert("Clave incorrecta");
   }
-
 };
 
 
-const proyectosRef = collection(db, "proyectos");
+/* PROYECTOS */
 
-onSnapshot(proyectosRef, snap => {
-
-  const select = document.getElementById("proyectoSelect");
-
-  select.innerHTML = '<option value="">Seleccionar proyecto</option>';
-
-  snap.forEach(docu => {
-
-    const data = docu.data();
-
-    const opt = document.createElement("option");
-    opt.value = docu.id;
-    opt.textContent = data.nombre;
-
-    select.appendChild(opt);
-
-  });
-
-});
-
-
-document.getElementById("proyectoSelect")
-.addEventListener("change", e => {
-
-  proyectoActual = e.target.value;
-  localStorage.setItem("proyecto", proyectoActual);
-
-  cargarDatos();
-
-});
-
-
-window.crearProyecto = async () => {
+window.crearProyecto = async function () {
 
   if (!admin) return alert("Solo admin");
 
@@ -86,247 +54,220 @@ window.crearProyecto = async () => {
 
   if (!nombre) return;
 
-  const ref = await addDoc(collection(db, "proyectos"), {
+  await setDoc(doc(db, "proyectos", nombre), {
     nombre
   });
 
-  proyectoActual = ref.id;
-
-  localStorage.setItem("proyecto", proyectoActual);
-
-  cargarDatos();
-
+  document.getElementById("nuevoProyecto").value = "";
 };
 
+window.eliminarProyecto = async function () {
 
-window.eliminarProyecto = async () => {
-
-  if (!admin) return;
+  if (!admin) return alert("Solo admin");
 
   if (!proyectoActual) return;
 
   await deleteDoc(doc(db, "proyectos", proyectoActual));
-
-  proyectoActual = "";
-
-  localStorage.removeItem("proyecto");
-
 };
 
+const proyectoSelect = document.getElementById("proyectoSelect");
+
+onSnapshot(collection(db, "proyectos"), snap => {
+
+  proyectoSelect.innerHTML = "";
+
+  snap.forEach(docu => {
+
+    const op = document.createElement("option");
+    op.value = docu.id;
+    op.textContent = docu.id;
+
+    proyectoSelect.appendChild(op);
+  });
+
+  if (!proyectoActual && proyectoSelect.options.length > 0) {
+    proyectoActual = proyectoSelect.options[0].value;
+  }
+
+  cargarDatos();
+});
+
+proyectoSelect.onchange = () => {
+  proyectoActual = proyectoSelect.value;
+  cargarDatos();
+};
+
+
+/* PERSONAS */
+
+window.agregarPersona = async function () {
+
+  if (!admin) return alert("Solo admin");
+
+  const nombre = document.getElementById("nombreInput").value;
+
+  if (!nombre) return;
+
+  await addDoc(collection(db, "personas"), {
+    proyecto: proyectoActual,
+    nombre
+  });
+
+  document.getElementById("nombreInput").value = "";
+};
+
+
+/* INGRESOS */
+
+window.agregarIngreso = async function () {
+
+  if (!admin) return alert("Solo admin");
+
+  const persona = document.getElementById("personaIngreso").value;
+  const monto = Number(document.getElementById("montoIngreso").value);
+
+  if (!persona || !monto) return;
+
+  await addDoc(collection(db, "ingresos"), {
+    proyecto: proyectoActual,
+    persona,
+    monto,
+    fecha: new Date()
+  });
+
+  document.getElementById("montoIngreso").value = "";
+};
+
+
+/* GASTOS */
+
+window.agregarGasto = async function () {
+
+  if (!admin) return alert("Solo admin");
+
+  const persona = document.getElementById("personaGasto").value;
+  const monto = Number(document.getElementById("montoGasto").value);
+
+  if (!persona || !monto) return;
+
+  await addDoc(collection(db, "gastos"), {
+    proyecto: proyectoActual,
+    persona,
+    monto,
+    fecha: new Date()
+  });
+
+  document.getElementById("montoGasto").value = "";
+};
+
+
+/* DEUDAS */
+
+window.agregarDeuda = async function () {
+
+  if (!admin) return alert("Solo admin");
+
+  const deudor = document.getElementById("deudor").value;
+  const acreedor = document.getElementById("acreedor").value;
+  const monto = Number(document.getElementById("montoDeuda").value);
+
+  if (!deudor || !acreedor || !monto) return;
+
+  await addDoc(collection(db, "deudas"), {
+    proyecto: proyectoActual,
+    deudor,
+    acreedor,
+    monto
+  });
+};
+
+
+/* CARGAR DATOS */
 
 function cargarDatos() {
 
   if (!proyectoActual) return;
 
-  cargarPersonas();
-  cargarIngresos();
-  cargarEgresos();
+  onSnapshot(collection(db, "personas"), snap => {
 
-}
+    const lista = document.getElementById("listaPersonas");
+    lista.innerHTML = "";
 
+    const select1 = document.getElementById("personaIngreso");
+    const select2 = document.getElementById("personaGasto");
+    const select3 = document.getElementById("deudor");
+    const select4 = document.getElementById("acreedor");
 
+    select1.innerHTML = "";
+    select2.innerHTML = "";
+    select3.innerHTML = "";
+    select4.innerHTML = "";
 
-function cargarPersonas() {
+    snap.forEach(docu => {
 
-  const ref = collection(db, "proyectos", proyectoActual, "personas");
+      const d = docu.data();
 
-  onSnapshot(ref, snap => {
+      if (d.proyecto !== proyectoActual) return;
 
-    const div = document.getElementById("listaPersonas");
-    const sel1 = document.getElementById("personaIngreso");
-    const sel2 = document.getElementById("personaEgreso");
+      const li = document.createElement("li");
+      li.textContent = d.nombre;
+      lista.appendChild(li);
 
-    div.innerHTML = "";
-    sel1.innerHTML = "";
-    sel2.innerHTML = "";
+      [select1, select2, select3, select4].forEach(sel => {
 
-    snap.forEach(d => {
-
-      const data = d.data();
-
-      const item = document.createElement("div");
-      item.className = "item";
-
-      item.innerHTML = `
-        ${data.nombre}
-        ${admin ? `<button class="delete" onclick="eliminarPersona('${d.id}')">X</button>` : ""}
-      `;
-
-      div.appendChild(item);
-
-      const opt1 = document.createElement("option");
-      opt1.value = data.nombre;
-      opt1.textContent = data.nombre;
-
-      const opt2 = opt1.cloneNode(true);
-
-      sel1.appendChild(opt1);
-      sel2.appendChild(opt2);
-
+        const op = document.createElement("option");
+        op.value = d.nombre;
+        op.textContent = d.nombre;
+        sel.appendChild(op);
+      });
     });
-
   });
 
-}
 
-
-window.agregarPersona = async () => {
-
-  if (!admin) return;
-
-  const nombre = document.getElementById("nombrePersona").value;
-
-  await addDoc(
-    collection(db, "proyectos", proyectoActual, "personas"),
-    { nombre }
-  );
-
-};
-
-
-window.eliminarPersona = async (id) => {
-
-  if (!admin) return;
-
-  await deleteDoc(
-    doc(db, "proyectos", proyectoActual, "personas", id)
-  );
-
-};
-
-
-function cargarIngresos() {
-
-  const ref = collection(db, "proyectos", proyectoActual, "ingresos");
-
-  onSnapshot(ref, snap => {
+  onSnapshot(collection(db, "ingresos"), snap => {
 
     let total = 0;
-    const div = document.getElementById("listaIngresos");
-    div.innerHTML = "";
 
-    snap.forEach(d => {
+    snap.forEach(docu => {
 
-      const data = d.data();
-
-      total += Number(data.monto);
-
-      const item = document.createElement("div");
-      item.className = "item";
-
-      item.innerHTML = `
-        ${data.persona} - ${formato(data.monto)}
-        ${admin ? `<button class="delete" onclick="eliminarIngreso('${d.id}')">X</button>` : ""}
-      `;
-
-      div.appendChild(item);
-
+      const d = docu.data();
+      if (d.proyecto === proyectoActual) total += d.monto;
     });
 
     document.getElementById("totalIngresos").innerText = formato(total);
-    calcularBalance();
-
   });
 
-}
 
-
-window.agregarIngreso = async () => {
-
-  if (!admin) return;
-
-  const persona = document.getElementById("personaIngreso").value;
-  const monto = document.getElementById("montoIngreso").value;
-
-  await addDoc(
-    collection(db, "proyectos", proyectoActual, "ingresos"),
-    { persona, monto }
-  );
-
-};
-
-
-window.eliminarIngreso = async (id) => {
-
-  if (!admin) return;
-
-  await deleteDoc(
-    doc(db, "proyectos", proyectoActual, "ingresos", id)
-  );
-
-};
-
-
-
-function cargarEgresos() {
-
-  const ref = collection(db, "proyectos", proyectoActual, "egresos");
-
-  onSnapshot(ref, snap => {
+  onSnapshot(collection(db, "gastos"), snap => {
 
     let total = 0;
-    const div = document.getElementById("listaEgresos");
-    div.innerHTML = "";
 
-    snap.forEach(d => {
+    snap.forEach(docu => {
 
-      const data = d.data();
-
-      total += Number(data.monto);
-
-      const item = document.createElement("div");
-      item.className = "item";
-
-      item.innerHTML = `
-        ${data.persona} - ${formato(data.monto)}
-        ${admin ? `<button class="delete" onclick="eliminarEgreso('${d.id}')">X</button>` : ""}
-      `;
-
-      div.appendChild(item);
-
+      const d = docu.data();
+      if (d.proyecto === proyectoActual) total += d.monto;
     });
 
-    document.getElementById("totalEgresos").innerText = formato(total);
-    calcularBalance();
-
+    document.getElementById("totalGastos").innerText = formato(total);
   });
 
-}
 
+  onSnapshot(collection(db, "deudas"), snap => {
 
-window.agregarEgreso = async () => {
+    const lista = document.getElementById("listaDeudas");
+    lista.innerHTML = "";
 
-  if (!admin) return;
+    snap.forEach(docu => {
 
-  const persona = document.getElementById("personaEgreso").value;
-  const monto = document.getElementById("montoEgreso").value;
+      const d = docu.data();
+      if (d.proyecto !== proyectoActual) return;
 
-  await addDoc(
-    collection(db, "proyectos", proyectoActual, "egresos"),
-    { persona, monto }
-  );
+      const li = document.createElement("li");
+      li.textContent =
+        `${d.deudor} 👉 debe ${formato(d.monto)} a ${d.acreedor}`;
 
-};
-
-
-window.eliminarEgreso = async (id) => {
-
-  if (!admin) return;
-
-  await deleteDoc(
-    doc(db, "proyectos", proyectoActual, "egresos", id)
-  );
-
-};
-
-
-function calcularBalance() {
-
-  const ingresos = document.getElementById("totalIngresos").innerText.replace(/\D/g,"");
-  const egresos = document.getElementById("totalEgresos").innerText.replace(/\D/g,"");
-
-  const total = ingresos - egresos;
-
-  document.getElementById("balanceTotal").innerText = formato(total);
+      lista.appendChild(li);
+    });
+  });
 
 }
