@@ -118,15 +118,8 @@ window.createProject = async function () {
 
 window.deleteProject = async function () {
 
-  if (!isAdmin()) {
-    alert("Solo admin");
-    return;
-  }
-
-  if (!currentProject) {
-    alert("Selecciona proyecto");
-    return;
-  }
+  if (!isAdmin()) return;
+  if (!currentProject) return;
 
   if (!confirm("¿Eliminar proyecto?")) return;
 
@@ -143,7 +136,6 @@ window.deleteProject = async function () {
 document.getElementById("projectSelect").addEventListener("change", (e) => {
 
   currentProject = e.target.value;
-
   if (!currentProject) return;
 
   connectProject();
@@ -233,13 +225,13 @@ function updateUI() {
   data.people.forEach((p, i) => {
 
     peopleList.innerHTML += `
-      <li class="people-item">
-        <div class="people-name">🤙 ${p}</div>
+      <div class="people-item">
+        <div class="people-left">🤙 ${p}</div>
         ${isAdmin()
           ? `<button class="btn-delete" onclick="deletePerson(${i})">✕</button>`
           : ""
         }
-      </li>
+      </div>
     `;
 
     const opt1 = document.createElement("option");
