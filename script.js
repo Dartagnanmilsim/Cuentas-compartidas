@@ -1,75 +1,74 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBfMEoJ0yuS9EE1UC8cWH",
+  authDomain: "gastos-parche.firebaseapp.com",
+  projectId: "gastos-parche",
+  storageBucket: "gastos-parche.appspot.com",
+  messagingSenderId: "558910304272",
+  appId: "1:558910304272:web:e9ae826d1"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 const ADMIN_PASSWORD = "1234";
-
 let role = "viewer";
-let budgets = JSON.parse(localStorage.getItem("budgets")) || {};
-let currentBudget = localStorage.getItem("currentBudget") || null;
 
-function save() {
-  localStorage.setItem("budgets", JSON.stringify(budgets));
-  localStorage.setItem("currentBudget", currentBudget);
+const params = new URLSearchParams(window.location.search);
+const budgetId = params.get("id") || "default";
+
+let data = {
+  people: [],
+  transactions: []
+};
+
+function ref() {
+  return doc(db, "budgets", budgetId);
 }
 
-function login() {
+async function save() {
+  await setDoc(ref(), data);
+}
+
+function listen() {
+  onSnapshot(ref(), (snapshot) => {
+    if (snapshot.exists()) {
+      data = snapshot.data();
+      updateUI();
+    } else {
+      save();
+    }
+  });
+}
+
+window.login = function () {
   const pass = document.getElementById("adminPass").value;
 
   if (pass === ADMIN_PASSWORD) {
     role = "admin";
     document.getElementById("roleLabel").textContent = "Modo: 👑 Admin";
     document.querySelectorAll(".admin").forEach(e => e.classList.remove("hidden"));
-    updateUI();
-  } else {
-    alert("Clave incorrecta");
   }
-}
+};
 
-function addBudget() {
-  if (role !== "admin") return alert("Solo admin");
-
-  const name = document.getElementById("budgetName").value.trim();
-  if (!name) return;
-
-  budgets[name] = { people: [], transactions: [] };
-  currentBudget = name;
-
-  save();
-  updateBudgetSelect();
-  updateUI();
-}
-
-function changeBudget() {
-  currentBudget = document.getElementById("budgetSelect").value;
-  save();
-  updateUI();
-}
-
-function addPerson() {
+window.addPerson = function () {
   if (role !== "admin") return;
 
   const name = document.getElementById("personName").value.trim();
   if (!name) return;
 
-  budgets[currentBudget].people.push(name);
+  data.people.push(name);
   save();
-  updateUI();
-}
+};
 
-function deletePerson(index) {
-  if (role !== "admin") return;
-
-  const personName = budgets[currentBudget].people[index];
-
-  budgets[currentBudget].people.splice(index, 1);
-
-  budgets[currentBudget].transactions =
-    budgets[currentBudget].transactions.filter(
-      t => t.person !== personName
-    );
-
-  save();
-  updateUI();
-}
-
-function addTransaction(type) {
+window.addTransaction = function (type) {
   if (role !== "admin") return;
 
   const person = document.getElementById(
@@ -84,18 +83,16 @@ function addTransaction(type) {
 
   if (!person || !amount) return;
 
-  budgets[currentBudget].transactions.push({ person, amount, type });
+  data.transactions.push({ person, amount, type });
   save();
-  updateUI();
-}
+};
 
-function deleteTransaction(index) {
+window.deleteTransaction = function (index) {
   if (role !== "admin") return;
 
-  budgets[currentBudget].transactions.splice(index, 1);
+  data.transactions.splice(index, 1);
   save();
-  updateUI();
-}
+};
 
 function formatMoney(n) {
   return n.toLocaleString("es-CO", {
@@ -104,38 +101,22 @@ function formatMoney(n) {
   });
 }
 
-function updateBudgetSelect() {
-  const select = document.getElementById("budgetSelect");
-  select.innerHTML = "";
-
-  Object.keys(budgets).forEach(name => {
-    select.innerHTML += `<option>${name}</option>`;
-  });
-
-  if (currentBudget) select.value = currentBudget;
-}
-
 function updateUI() {
-  if (!currentBudget || !budgets[currentBudget]) return;
 
-  const data = budgets[currentBudget];
+  document.getElementById("shareLink").value = window.location.href;
 
   const peopleList = document.getElementById("peopleList");
   const incomeSelect = document.getElementById("incomePerson");
   const expenseSelect = document.getElementById("expensePerson");
 
+  if (!peopleList) return;
+
   peopleList.innerHTML = "";
   incomeSelect.innerHTML = "";
   expenseSelect.innerHTML = "";
 
-  data.people.forEach((p, i) => {
-
-    peopleList.innerHTML += `
-      <li>🤙 ${p}
-        <button class="btn-delete" onclick="deletePerson(${i})">✖</button>
-      </li>
-    `;
-
+  data.people.forEach((p) => {
+    peopleList.innerHTML += `<li>🤙 ${p}</li>`;
     incomeSelect.innerHTML += `<option>${p}</option>`;
     expenseSelect.innerHTML += `<option>${p}</option>`;
   });
@@ -154,9 +135,10 @@ function updateUI() {
     const html = `
       <div class="item">
         <span>${t.type === "income" ? "🍻" : "💩"} ${t.person} - $${formatMoney(t.amount)}</span>
-        <div class="actions">
-          <button class="btn-delete" onclick="deleteTransaction(${i})">✖</button>
-        </div>
+        ${role === "admin"
+          ? `<button class="btn-delete" onclick="deleteTransaction(${i})">✖</button>`
+          : ""
+        }
       </div>
     `;
 
@@ -176,5 +158,4 @@ function updateUI() {
     "$ " + formatMoney(totalIncome - totalExpense);
 }
 
-updateBudgetSelect();
-updateUI();
+listen();
