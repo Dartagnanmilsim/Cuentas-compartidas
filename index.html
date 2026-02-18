@@ -7,37 +7,50 @@
 
 <link rel="stylesheet" href="style.css">
 
-<script type="module" src="app.js"></script>
-<script type="module" src="script.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 </head>
+
 <body>
 
 <div class="container">
 
 <h1>🍻 Gastos del Parche</h1>
 
-<!-- PERSONAS -->
+<!-- ADMIN -->
+<div class="card">
+<h2>🔐 Acceso Admin</h2>
 
+<input type="password" id="adminPass" placeholder="Clave admin">
+<button onclick="loginAdmin()">Entrar</button>
+
+<p id="modoAdmin">Modo 👀 Solo ver</p>
+</div>
+
+
+<!-- INTEGRANTES -->
 <div class="card">
 <h2>👥 Integrantes</h2>
 
 <div class="row">
-<input id="nombrePersona" placeholder="Nombre">
-<button onclick="agregarPersona()">Agregar</button>
+<input type="text" id="nombreIntegrante" placeholder="Nombre">
+<button onclick="agregarIntegrante()">Agregar</button>
 </div>
 
-<div id="listaPersonas"></div>
+<div id="listaIntegrantes"></div>
 </div>
 
 
 <!-- INGRESOS -->
-
 <div class="card">
 <h2>🍻 Quién puso</h2>
 
-<select id="personaIngreso"></select>
-<input id="montoIngreso" placeholder="Monto" type="number">
+<div class="row">
+<select id="selectIngreso"></select>
+<input type="number" id="montoIngreso" placeholder="Monto">
+</div>
+
 <button onclick="agregarIngreso()">Agregar</button>
 
 <h3 id="totalIngresos">Total: $ 0</h3>
@@ -47,15 +60,18 @@
 
 
 <!-- GASTOS -->
-
 <div class="card">
 <h2>💩 En qué se fue</h2>
 
-<select id="personaGasto"></select>
-<input id="descripcionGasto" placeholder="Descripción">
-<input id="montoGasto" placeholder="Monto" type="number">
+<div class="row">
+<select id="selectGasto"></select>
+<input type="text" id="descGasto" placeholder="Descripción">
+</div>
 
+<div class="row">
+<input type="number" id="montoGasto" placeholder="Monto">
 <button onclick="agregarGasto()">Agregar</button>
+</div>
 
 <h3 id="totalGastos">Total: $ 0</h3>
 <div id="listaGastos"></div>
@@ -63,29 +79,36 @@
 </div>
 
 
-<!-- BALANCE -->
-
+<!-- DEUDAS -->
 <div class="card">
-<h2>⚖️ Quién debe a quién</h2>
-<div id="balance"></div>
+<h2>💸 Quién debe a quién</h2>
+
+<div class="row">
+<select id="deudor"></select>
+<select id="acreedor"></select>
+<input type="number" id="montoDeuda" placeholder="Monto">
+</div>
+
+<button onclick="agregarDeuda()">Agregar</button>
+
+<div id="listaDeudas"></div>
 </div>
 
 
 <!-- RANKING -->
-
 <div class="card">
 <h2>🏆 Ranking</h2>
 <div id="ranking"></div>
 </div>
 
 
-<!-- WHATSAPP -->
-
-<div class="card">
-<button onclick="enviarWhatsApp()">📲 Enviar resumen</button>
-</div>
+<button class="whatsapp" onclick="enviarWhatsApp()">📲 Enviar resumen por WhatsApp</button>
 
 </div>
+
+
+<script src="app.js"></script>
+<script src="script.js"></script>
 
 </body>
 </html>
