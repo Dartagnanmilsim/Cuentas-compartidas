@@ -11,10 +11,12 @@ function save() {
 
 function login() {
   const pass = document.getElementById("adminPass").value;
+
   if (pass === ADMIN_PASSWORD) {
     role = "admin";
-    document.getElementById("roleLabel").textContent = "Modo: Administrador";
+    document.getElementById("roleLabel").textContent = "Modo: 👑 Admin";
     document.querySelectorAll(".admin").forEach(e => e.classList.remove("hidden"));
+    updateUI();
   } else {
     alert("Clave incorrecta");
   }
@@ -28,6 +30,7 @@ function addBudget() {
 
   budgets[name] = { people: [], transactions: [] };
   currentBudget = name;
+
   save();
   updateBudgetSelect();
   updateUI();
@@ -51,7 +54,17 @@ function addPerson() {
 }
 
 function deletePerson(index) {
+  if (role !== "admin") return;
+
+  const personName = budgets[currentBudget].people[index];
+
   budgets[currentBudget].people.splice(index, 1);
+
+  budgets[currentBudget].transactions =
+    budgets[currentBudget].transactions.filter(
+      t => t.person !== personName
+    );
+
   save();
   updateUI();
 }
@@ -72,6 +85,14 @@ function addTransaction(type) {
   if (!person || !amount) return;
 
   budgets[currentBudget].transactions.push({ person, amount, type });
+  save();
+  updateUI();
+}
+
+function deleteTransaction(index) {
+  if (role !== "admin") return;
+
+  budgets[currentBudget].transactions.splice(index, 1);
   save();
   updateUI();
 }
@@ -108,8 +129,11 @@ function updateUI() {
   expenseSelect.innerHTML = "";
 
   data.people.forEach((p, i) => {
+
     peopleList.innerHTML += `
-      <li>${p} <button onclick="deletePerson(${i})">❌</button></li>
+      <li>🤙 ${p}
+        <button class="btn-delete" onclick="deletePerson(${i})">✖</button>
+      </li>
     `;
 
     incomeSelect.innerHTML += `<option>${p}</option>`;
@@ -119,22 +143,29 @@ function updateUI() {
   let totalIncome = 0;
   let totalExpense = 0;
 
-  document.getElementById("incomeList").innerHTML = "";
-  document.getElementById("expenseList").innerHTML = "";
+  const incomeList = document.getElementById("incomeList");
+  const expenseList = document.getElementById("expenseList");
+
+  incomeList.innerHTML = "";
+  expenseList.innerHTML = "";
 
   data.transactions.forEach((t, i) => {
+
     const html = `
       <div class="item">
-        <span>${t.person} - $${formatMoney(t.amount)}</span>
+        <span>${t.type === "income" ? "🍻" : "💩"} ${t.person} - $${formatMoney(t.amount)}</span>
+        <div class="actions">
+          <button class="btn-delete" onclick="deleteTransaction(${i})">✖</button>
+        </div>
       </div>
     `;
 
     if (t.type === "income") {
       totalIncome += t.amount;
-      document.getElementById("incomeList").innerHTML += html;
+      incomeList.innerHTML += html;
     } else {
       totalExpense += t.amount;
-      document.getElementById("expenseList").innerHTML += html;
+      expenseList.innerHTML += html;
     }
   });
 
