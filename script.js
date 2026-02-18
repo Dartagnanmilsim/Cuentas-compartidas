@@ -44,6 +44,7 @@ async function save(){
 }
 
 async function loadProjects(){
+
   const querySnapshot = await getDocs(collection(db,"budgets"));
   const select = document.getElementById("projectSelect");
 
@@ -64,6 +65,7 @@ function connectProject(){
   if(unsubscribe) unsubscribe();
 
   unsubscribe = onSnapshot(ref(), snap=>{
+
     if(snap.exists()) data = snap.data();
     else data = { people:[], transactions:[] };
 
@@ -72,12 +74,16 @@ function connectProject(){
 }
 
 window.login = function(){
+
   let pass = document.getElementById("adminPass").value;
 
   if(pass === ADMIN_PASSWORD){
+
     role="admin";
     document.getElementById("roleLabel").textContent="Modo: 👑 Admin";
-    document.querySelectorAll(".admin").forEach(e=>e.classList.remove("hidden"));
+
+    document.querySelectorAll(".admin")
+      .forEach(e=>e.classList.remove("hidden"));
   }
 };
 
@@ -98,7 +104,9 @@ window.createProject = async function(){
   });
 
   await loadProjects();
+
   document.getElementById("projectSelect").value=name;
+
   connectProject();
 };
 
@@ -108,11 +116,14 @@ window.deleteProject = async function(){
   if(!currentProject) return;
 
   await deleteDoc(doc(db,"budgets",currentProject));
+
   currentProject=null;
 
   if(unsubscribe) unsubscribe();
 
   await loadProjects();
+
+  alert("Proyecto eliminado");
 };
 
 document.getElementById("projectSelect").addEventListener("change",e=>{
@@ -128,14 +139,18 @@ window.addPerson=function(){
   if(!name) return;
 
   data.people.push(name);
+
   save();
 };
 
 window.deletePerson=function(i){
+
   if(!isAdmin()) return;
 
   let name=data.people[i];
+
   data.people.splice(i,1);
+
   data.transactions=data.transactions.filter(t=>t.person!==name);
 
   save();
@@ -158,14 +173,18 @@ window.addTransaction=function(type){
   if(!person||!amount) return;
 
   data.transactions.push({person,amount,type});
+
   save();
 
-  partyMode();
+  partyMode();   // 🎉 ahora sí funciona
 };
 
 window.deleteTransaction=function(i){
+
   if(!isAdmin()) return;
+
   data.transactions.splice(i,1);
+
   save();
 };
 
@@ -176,10 +195,12 @@ function partyMode(){
   for(let i=0;i<10;i++){
 
     let el=document.createElement("div");
+
     el.className="party-emoji";
     el.innerText=emojis[Math.floor(Math.random()*emojis.length)];
 
     el.style.left=Math.random()*100+"%";
+    el.style.top="0px";
 
     document.body.appendChild(el);
 
@@ -199,11 +220,14 @@ function funText(balance){
   return "😎 Todo bajo control";
 }
 
-function shareWhatsApp(){
+window.shareWhatsApp = function(){
 
-  let text=`🍻 Gastos del Parche\n\n`;
+  if(!currentProject) return;
+
+  let text=`🍻 *${currentProject}*\n\n`;
 
   data.people.forEach(p=>{
+
     let total=data.transactions
       .filter(t=>t.person===p && t.type==="income")
       .reduce((a,b)=>a+b.amount,0);
@@ -212,8 +236,9 @@ function shareWhatsApp(){
   });
 
   let url=`https://wa.me/?text=${encodeURIComponent(text)}`;
-  window.open(url);
-}
+
+  window.open(url,"_blank");
+};
 
 function updateUI(){
 
@@ -287,6 +312,7 @@ function updateUI(){
   document.getElementById("totalExpense").textContent=formatMoney(totalExpense);
 
   let balance=totalIncome-totalExpense;
+
   document.getElementById("balance").textContent="$ "+formatMoney(balance);
 
   document.getElementById("funMessage").textContent=funText(balance);
