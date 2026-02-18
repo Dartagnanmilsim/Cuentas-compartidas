@@ -1,66 +1,62 @@
 body{
-font-family: Arial;
+font-family:Arial;
 background:#f2f2f2;
-margin:0;
+padding:15px;
 }
 
-.container{
-max-width:600px;
-margin:auto;
-padding:15px;
+h1{
+text-align:center;
 }
 
 .card{
 background:white;
-padding:20px;
-margin:15px 0;
-border-radius:15px;
+padding:15px;
+margin-bottom:15px;
+border-radius:12px;
 box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
-.row{
-display:flex;
-gap:10px;
-margin-bottom:10px;
-}
-
 input,select{
-flex:1;
-padding:12px;
-border-radius:10px;
+width:100%;
+padding:10px;
+margin:5px 0;
+border-radius:8px;
 border:1px solid #ccc;
 }
 
 button{
+width:100%;
+padding:12px;
 background:#4CAF50;
 color:white;
 border:none;
-padding:12px;
 border-radius:10px;
-cursor:pointer;
+margin-top:5px;
+font-size:16px;
 }
 
-.item{
+button.danger{
+background:#e74c3c;
+}
+
+ul{
+padding-left:20px;
+}
+
+li{
+margin-bottom:6px;
 display:flex;
 justify-content:space-between;
-padding:6px 0;
-border-bottom:1px solid #eee;
-}
-
-.delete{
-background:#ff4d4d;
-border-radius:50%;
-width:24px;
-height:24px;
-color:white;
-display:flex;
 align-items:center;
-justify-content:center;
-cursor:pointer;
 }
 
-.whatsapp{
-width:100%;
-background:#25D366;
-margin-top:15px;
+.delete-btn{
+background:#ffdddd;
+color:#900;
+border:none;
+border-radius:50%;
+width:26px;
+height:26px;
+cursor:pointer;
+font-weight:bold;
 }
