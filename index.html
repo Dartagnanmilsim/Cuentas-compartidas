@@ -10,15 +10,17 @@
 
 <h1>🍻 Gastos del Parche</h1>
 
+<!-- PROYECTO -->
 <div class="card">
   <h2>📂 Proyecto</h2>
 
   <select id="projectSelect"></select>
 
-  <input type="text" id="newProject" placeholder="Nuevo proyecto">
+  <input type="text" id="newProject" placeholder="Nuevo proyecto (solo admin)">
   <button onclick="createProject()">Crear</button>
 </div>
 
+<!-- LOGIN -->
 <div class="card">
   <h2>🔐 Acceso Admin</h2>
   <input type="password" id="adminPass" placeholder="Clave admin">
@@ -26,6 +28,7 @@
   <p id="roleLabel">Modo: 👀 Solo ver</p>
 </div>
 
+<!-- PERSONAS (SOLO ADMIN) -->
 <div class="card admin hidden">
   <h2>🤙 El Combo</h2>
   <input type="text" id="personName" placeholder="Nombre">
@@ -35,7 +38,8 @@
 
 <div class="grid">
 
-  <div class="card admin hidden">
+  <!-- INGRESOS (TODOS VEN) -->
+  <div class="card">
     <h2>🍻 Quién puso</h2>
 
     <select id="incomePerson"></select>
@@ -47,7 +51,8 @@
     <h3>Total: <span id="totalIncome">0</span></h3>
   </div>
 
-  <div class="card admin hidden">
+  <!-- GASTOS (TODOS VEN) -->
+  <div class="card">
     <h2>💩 En qué se fue</h2>
 
     <select id="expensePerson"></select>
@@ -61,6 +66,7 @@
 
 </div>
 
+<!-- BALANCE -->
 <div class="card total">
   <h2>🔥 Cómo vamos</h2>
   <h3 id="balance">$0</h3>
