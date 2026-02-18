@@ -34,7 +34,7 @@ return "$ " + Number(n || 0).toLocaleString("es-CO");
 }
 
 
-// ================= ADMIN
+// ================= ADMIN =================
 
 window.loginAdmin=()=>{
 
@@ -43,6 +43,12 @@ const pass=document.getElementById("claveAdmin").value;
 if(pass==="1234"){
 admin=true;
 document.getElementById("modoTexto").innerText="Modo 👑 Admin";
+
+/* 🔥 FIX: recargar datos para mostrar botones eliminar */
+if(proyectoActual){
+cargarDatos();
+}
+
 }else{
 alert("Clave incorrecta");
 }
@@ -50,7 +56,7 @@ alert("Clave incorrecta");
 };
 
 
-// ================= PROYECTOS
+// ================= PROYECTOS =================
 
 const proyectoSelect=document.getElementById("proyectoSelect");
 
@@ -103,7 +109,7 @@ cargarDatos();
 };
 
 
-// ================= PERSONAS
+// ================= PERSONAS =================
 
 window.agregarPersona=async()=>{
 
@@ -117,12 +123,10 @@ proyecto:proyectoActual,
 nombre
 });
 
-document.getElementById("nombrePersona").value="";
-
 };
 
 
-// ================= INGRESOS
+// ================= INGRESOS =================
 
 window.agregarIngreso=async()=>{
 
@@ -140,7 +144,7 @@ monto:Number(monto)
 };
 
 
-// ================= GASTOS
+// ================= GASTOS =================
 
 window.agregarGasto=async()=>{
 
@@ -158,7 +162,7 @@ monto:Number(monto)
 };
 
 
-// ================= DEUDAS
+// ================= DEUDAS =================
 
 window.agregarDeuda=async()=>{
 
@@ -178,7 +182,7 @@ monto:Number(monto)
 };
 
 
-// ================= WHATSAPP
+// ================= WHATSAPP =================
 
 window.compartirWhatsApp=()=>{
 
@@ -189,7 +193,7 @@ window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`);
 };
 
 
-// ================= CARGAR DATOS
+// ================= CARGAR DATOS =================
 
 function cargarDatos(){
 
@@ -215,13 +219,9 @@ const d=docu.data();
 if(d.proyecto!==proyectoActual) return;
 
 const li=document.createElement("li");
+li.textContent=d.nombre;
 
-li.innerHTML=`${d.nombre}`;
-
-
-// 🔥 ELIMINAR INTEGRANTE SOLO ADMIN
 if(admin){
-
 const btn=document.createElement("button");
 btn.textContent="X";
 btn.className="delete-btn";
@@ -231,14 +231,10 @@ await deleteDoc(doc(db,"personas",docu.id));
 };
 
 li.appendChild(btn);
-
 }
-
 
 lista.appendChild(li);
 
-
-// llenar selects
 [s1,s2,s3,s4].forEach(sel=>{
 const op=document.createElement("option");
 op.value=d.nombre;
@@ -251,8 +247,7 @@ sel.appendChild(op);
 });
 
 
-// ================= INGRESOS
-
+// INGRESOS
 onSnapshot(collection(db,"ingresos"),snap=>{
 
 let total=0;
@@ -296,8 +291,7 @@ actualizarRanking(rankingTemp);
 });
 
 
-// ================= GASTOS
-
+// GASTOS
 onSnapshot(collection(db,"gastos"),snap=>{
 
 let total=0;
@@ -337,8 +331,7 @@ actualizarBalance();
 });
 
 
-// ================= DEUDAS
-
+// DEUDAS
 onSnapshot(collection(db,"deudas"),snap=>{
 
 const lista=document.getElementById("listaDeudas");
@@ -373,7 +366,7 @@ lista.appendChild(li);
 }
 
 
-// ================= BALANCE
+// ================= BALANCE =================
 
 function actualizarBalance(){
 
@@ -387,7 +380,7 @@ document.getElementById("balance").innerText=formato(total);
 }
 
 
-// ================= RANKING
+// ================= RANKING =================
 
 function actualizarRanking(data){
 
