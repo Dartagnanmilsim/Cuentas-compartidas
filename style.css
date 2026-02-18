@@ -1,8 +1,8 @@
 body {
-  font-family: Arial, sans-serif;
+  font-family: Arial;
+  background: #f4f4f4;
   margin: 0;
   padding: 12px;
-  background: #f4f4f4;
 }
 
 h1 {
@@ -14,7 +14,7 @@ h1 {
   padding: 16px;
   margin: 12px 0;
   border-radius: 14px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
 }
 
 input, select, button {
@@ -22,7 +22,6 @@ input, select, button {
   padding: 12px;
   margin: 6px 0;
   font-size: 16px;
-  box-sizing: border-box;
 }
 
 button {
@@ -30,7 +29,6 @@ button {
   color: white;
   border: none;
   border-radius: 10px;
-  font-weight: bold;
 }
 
 .grid {
@@ -52,74 +50,35 @@ button {
   align-items: center;
   background: #fafafa;
   padding: 12px;
-  border-radius: 12px;
+  border-radius: 10px;
   margin-top: 8px;
-  border: 1px solid #eee;
-}
-
-.people-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .avatar {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   color: white;
-  font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-weight: bold;
 }
 
 .btn-delete {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: none;
   background: #ffe5e5;
   color: #e53935;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
 }
 
 .total {
-  text-align: center;
   background: #e8f5e9;
-}
-
-.project-row {
-  display: flex;
-  gap: 6px;
-}
-
-.project-row select {
-  flex: 1;
-}
-
-.btn-delete-project {
-  width: 50px;
-  background: #ff4d4d;
+  text-align: center;
 }
 
 .admin.hidden {
   display: none;
-}
-
-/* PARTY MODE */
-.party-emoji {
-  position: fixed;
-  font-size: 24px;
-  animation: fall 1.5s linear forwards;
-}
-
-@keyframes fall {
-  to {
-    transform: translateY(400px);
-    opacity: 0;
-  }
 }
