@@ -34,7 +34,8 @@ return "$ " + Number(n || 0).toLocaleString("es-CO");
 }
 
 
-// ADMIN
+// ================= ADMIN
+
 window.loginAdmin=()=>{
 
 const pass=document.getElementById("claveAdmin").value;
@@ -49,7 +50,8 @@ alert("Clave incorrecta");
 };
 
 
-// PROYECTOS
+// ================= PROYECTOS
+
 const proyectoSelect=document.getElementById("proyectoSelect");
 
 onSnapshot(collection(db,"proyectos"),snap=>{
@@ -101,7 +103,8 @@ cargarDatos();
 };
 
 
-// PERSONAS
+// ================= PERSONAS
+
 window.agregarPersona=async()=>{
 
 if(!admin) return;
@@ -114,10 +117,13 @@ proyecto:proyectoActual,
 nombre
 });
 
+document.getElementById("nombrePersona").value="";
+
 };
 
 
-// INGRESOS
+// ================= INGRESOS
+
 window.agregarIngreso=async()=>{
 
 if(!admin) return;
@@ -134,7 +140,8 @@ monto:Number(monto)
 };
 
 
-// GASTOS
+// ================= GASTOS
+
 window.agregarGasto=async()=>{
 
 if(!admin) return;
@@ -151,7 +158,8 @@ monto:Number(monto)
 };
 
 
-// DEUDAS
+// ================= DEUDAS
+
 window.agregarDeuda=async()=>{
 
 if(!admin) return;
@@ -170,7 +178,8 @@ monto:Number(monto)
 };
 
 
-// WHATSAPP
+// ================= WHATSAPP
+
 window.compartirWhatsApp=()=>{
 
 const texto=`Balance actual del parche: ${document.getElementById("balance").innerText}`;
@@ -206,9 +215,30 @@ const d=docu.data();
 if(d.proyecto!==proyectoActual) return;
 
 const li=document.createElement("li");
-li.textContent=d.nombre;
+
+li.innerHTML=`${d.nombre}`;
+
+
+// 🔥 ELIMINAR INTEGRANTE SOLO ADMIN
+if(admin){
+
+const btn=document.createElement("button");
+btn.textContent="X";
+btn.className="delete-btn";
+
+btn.onclick=async()=>{
+await deleteDoc(doc(db,"personas",docu.id));
+};
+
+li.appendChild(btn);
+
+}
+
+
 lista.appendChild(li);
 
+
+// llenar selects
 [s1,s2,s3,s4].forEach(sel=>{
 const op=document.createElement("option");
 op.value=d.nombre;
@@ -221,7 +251,8 @@ sel.appendChild(op);
 });
 
 
-// INGRESOS
+// ================= INGRESOS
+
 onSnapshot(collection(db,"ingresos"),snap=>{
 
 let total=0;
@@ -265,7 +296,8 @@ actualizarRanking(rankingTemp);
 });
 
 
-// GASTOS
+// ================= GASTOS
+
 onSnapshot(collection(db,"gastos"),snap=>{
 
 let total=0;
@@ -305,7 +337,8 @@ actualizarBalance();
 });
 
 
-// DEUDAS
+// ================= DEUDAS
+
 onSnapshot(collection(db,"deudas"),snap=>{
 
 const lista=document.getElementById("listaDeudas");
@@ -340,7 +373,8 @@ lista.appendChild(li);
 }
 
 
-// BALANCE
+// ================= BALANCE
+
 function actualizarBalance(){
 
 const ingresos=Number(document.getElementById("totalIngresos").innerText.replace(/\D/g,""));
@@ -353,7 +387,8 @@ document.getElementById("balance").innerText=formato(total);
 }
 
 
-// RANKING
+// ================= RANKING
+
 function actualizarRanking(data){
 
 const lista=document.getElementById("ranking");
