@@ -6,17 +6,17 @@
 <title>Gastos del Parche</title>
 
 <link rel="stylesheet" href="style.css">
-
-<script type="module" src="script.js"></script>
 </head>
 
 <body>
 
 <h1>🍻 Gastos del Parche</h1>
 
+<!-- PROYECTO -->
+
 <div class="card">
 
-<h2>📁 Proyecto</h2>
+<h2>📂 Proyecto</h2>
 
 <select id="proyectoSelect"></select>
 
@@ -28,11 +28,13 @@
 </div>
 
 
+<!-- ADMIN -->
+
 <div class="card">
 
 <h2>🔐 Acceso Admin</h2>
 
-<input type="password" id="claveAdmin" placeholder="Clave admin">
+<input id="claveAdmin" type="password" placeholder="Clave admin">
 
 <button onclick="loginAdmin()">Entrar</button>
 
@@ -40,6 +42,8 @@
 
 </div>
 
+
+<!-- PERSONAS -->
 
 <div class="card">
 
@@ -54,6 +58,8 @@
 </div>
 
 
+<!-- INGRESOS -->
+
 <div class="card">
 
 <h2>🍻 Quién puso</h2>
@@ -65,10 +71,12 @@
 
 <div id="listaIngresos"></div>
 
-<h3>Total: <span id="totalIngresos">0</span></h3>
+<h3>Total: <span id="totalIngresos">$ 0</span></h3>
 
 </div>
 
+
+<!-- GASTOS -->
 
 <div class="card">
 
@@ -81,21 +89,25 @@
 
 <div id="listaGastos"></div>
 
-<h3>Total: <span id="totalGastos">0</span></h3>
+<h3>Total: <span id="totalGastos">$ 0</span></h3>
 
 </div>
 
 
-<div class="card resumen">
+<!-- BALANCE -->
+
+<div class="card balance">
 
 <h2>🔥 Cómo vamos</h2>
 
-<h1 id="balance">0</h1>
+<h1 id="balance">$ 0</h1>
 
 <button onclick="compartirWhatsApp()">📲 Compartir WhatsApp</button>
 
 </div>
 
+
+<!-- DEUDAS -->
 
 <div class="card">
 
@@ -103,13 +115,17 @@
 
 <select id="deudor"></select>
 <select id="acreedor"></select>
+
 <input id="montoDeuda" placeholder="Monto">
 
-<button onclick="agregarDeuda()">Agregar deuda</button>
+<button onclick="agregarDeuda()">Agregar</button>
 
 <div id="listaDeudas"></div>
 
 </div>
+
+
+<script type="module" src="script.js"></script>
 
 </body>
 </html>
