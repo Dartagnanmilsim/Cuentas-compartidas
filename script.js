@@ -6,75 +6,104 @@ function save() {
   localStorage.setItem("transactions", JSON.stringify(transactions));
 }
 
+function formatMoney(num) {
+  return num.toLocaleString("es-CO", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
 function addPerson() {
   const name = document.getElementById("personName").value.trim();
   if (!name) return;
 
-  people.push({ name });
+  people.push(name);
   save();
   document.getElementById("personName").value = "";
   updateUI();
 }
 
-function addTransaction() {
-  const person = document.getElementById("personSelect").value;
-  const amount = parseFloat(document.getElementById("amount").value);
-  const type = document.getElementById("type").value;
+function addTransaction(type) {
+  const person = document.getElementById(
+    type === "income" ? "incomePerson" : "expensePerson"
+  ).value;
+
+  const amount = parseFloat(
+    document.getElementById(
+      type === "income" ? "incomeAmount" : "expenseAmount"
+    ).value
+  );
 
   if (!person || !amount) return;
 
-  transactions.push({
-    person,
-    amount,
-    type
-  });
-
+  transactions.push({ person, amount, type });
   save();
-  document.getElementById("amount").value = "";
+  updateUI();
+}
+
+function editTransaction(index) {
+  const newAmount = prompt("Nuevo valor:");
+  if (!newAmount) return;
+
+  transactions[index].amount = parseFloat(newAmount);
+  save();
+  updateUI();
+}
+
+function deleteTransaction(index) {
+  transactions.splice(index, 1);
+  save();
   updateUI();
 }
 
 function updateUI() {
-  const select = document.getElementById("personSelect");
-  select.innerHTML = "";
+  const incomeList = document.getElementById("incomeList");
+  const expenseList = document.getElementById("expenseList");
+  const incomeSelect = document.getElementById("incomePerson");
+  const expenseSelect = document.getElementById("expensePerson");
+  const peopleList = document.getElementById("peopleList");
+
+  incomeList.innerHTML = "";
+  expenseList.innerHTML = "";
+  incomeSelect.innerHTML = "";
+  expenseSelect.innerHTML = "";
+  peopleList.innerHTML = "";
 
   people.forEach(p => {
-    const option = document.createElement("option");
-    option.value = p.name;
-    option.textContent = p.name;
-    select.appendChild(option);
+    incomeSelect.innerHTML += `<option>${p}</option>`;
+    expenseSelect.innerHTML += `<option>${p}</option>`;
+    peopleList.innerHTML += `<li>${p}</li>`;
   });
 
-  renderSummary();
-}
+  let totalIncome = 0;
+  let totalExpense = 0;
 
-function renderSummary() {
-  let summary = "";
+  transactions.forEach((t, i) => {
+    const html = `
+      <div class="item">
+        <span>${t.person} - $${formatMoney(t.amount)}</span>
+        <div class="actions">
+          <button onclick="editTransaction(${i})">✏️</button>
+          <button onclick="deleteTransaction(${i})">❌</button>
+        </div>
+      </div>
+    `;
 
-  let totals = {};
-
-  people.forEach(p => {
-    totals[p.name] = 0;
-  });
-
-  transactions.forEach(t => {
-    if (t.type === "deposit") {
-      totals[t.person] += t.amount;
+    if (t.type === "income") {
+      totalIncome += t.amount;
+      incomeList.innerHTML += html;
     } else {
-      totals[t.person] -= t.amount;
+      totalExpense += t.amount;
+      expenseList.innerHTML += html;
     }
   });
 
-  let groupTotal = 0;
+  document.getElementById("totalIncome").textContent = formatMoney(totalIncome);
+  document.getElementById("totalExpense").textContent = formatMoney(totalExpense);
 
-  for (let name in totals) {
-    groupTotal += totals[name];
-    summary += `<p><strong>${name}:</strong> $${totals[name].toFixed(2)}</p>`;
-  }
-
-  summary += `<hr><h3>Total Grupo: $${groupTotal.toFixed(2)}</h3>`;
-
-  document.getElementById("summary").innerHTML = summary;
+  const balance = totalIncome - totalExpense;
+  document.getElementById("balance").textContent =
+    "$ " + formatMoney(balance);
 }
 
 updateUI();
