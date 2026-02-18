@@ -1,29 +1,64 @@
-let people = JSON.parse(localStorage.getItem("people")) || [];
-let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
+const ADMIN_PASSWORD = "1234";
+
+let role = "viewer";
+let budgets = JSON.parse(localStorage.getItem("budgets")) || {};
+let currentBudget = localStorage.getItem("currentBudget") || null;
 
 function save() {
-  localStorage.setItem("people", JSON.stringify(people));
-  localStorage.setItem("transactions", JSON.stringify(transactions));
+  localStorage.setItem("budgets", JSON.stringify(budgets));
+  localStorage.setItem("currentBudget", currentBudget);
 }
 
-function formatMoney(num) {
-  return num.toLocaleString("es-CO", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
+function login() {
+  const pass = document.getElementById("adminPass").value;
+  if (pass === ADMIN_PASSWORD) {
+    role = "admin";
+    document.getElementById("roleLabel").textContent = "Modo: Administrador";
+    document.querySelectorAll(".admin").forEach(e => e.classList.remove("hidden"));
+  } else {
+    alert("Clave incorrecta");
+  }
+}
+
+function addBudget() {
+  if (role !== "admin") return alert("Solo admin");
+
+  const name = document.getElementById("budgetName").value.trim();
+  if (!name) return;
+
+  budgets[name] = { people: [], transactions: [] };
+  currentBudget = name;
+  save();
+  updateBudgetSelect();
+  updateUI();
+}
+
+function changeBudget() {
+  currentBudget = document.getElementById("budgetSelect").value;
+  save();
+  updateUI();
 }
 
 function addPerson() {
+  if (role !== "admin") return;
+
   const name = document.getElementById("personName").value.trim();
   if (!name) return;
 
-  people.push(name);
+  budgets[currentBudget].people.push(name);
   save();
-  document.getElementById("personName").value = "";
+  updateUI();
+}
+
+function deletePerson(index) {
+  budgets[currentBudget].people.splice(index, 1);
+  save();
   updateUI();
 }
 
 function addTransaction(type) {
+  if (role !== "admin") return;
+
   const person = document.getElementById(
     type === "income" ? "incomePerson" : "expensePerson"
   ).value;
@@ -36,74 +71,79 @@ function addTransaction(type) {
 
   if (!person || !amount) return;
 
-  transactions.push({ person, amount, type });
+  budgets[currentBudget].transactions.push({ person, amount, type });
   save();
   updateUI();
 }
 
-function editTransaction(index) {
-  const newAmount = prompt("Nuevo valor:");
-  if (!newAmount) return;
-
-  transactions[index].amount = parseFloat(newAmount);
-  save();
-  updateUI();
+function formatMoney(n) {
+  return n.toLocaleString("es-CO", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
 }
 
-function deleteTransaction(index) {
-  transactions.splice(index, 1);
-  save();
-  updateUI();
+function updateBudgetSelect() {
+  const select = document.getElementById("budgetSelect");
+  select.innerHTML = "";
+
+  Object.keys(budgets).forEach(name => {
+    select.innerHTML += `<option>${name}</option>`;
+  });
+
+  if (currentBudget) select.value = currentBudget;
 }
 
 function updateUI() {
-  const incomeList = document.getElementById("incomeList");
-  const expenseList = document.getElementById("expenseList");
+  if (!currentBudget || !budgets[currentBudget]) return;
+
+  const data = budgets[currentBudget];
+
+  const peopleList = document.getElementById("peopleList");
   const incomeSelect = document.getElementById("incomePerson");
   const expenseSelect = document.getElementById("expensePerson");
-  const peopleList = document.getElementById("peopleList");
 
-  incomeList.innerHTML = "";
-  expenseList.innerHTML = "";
+  peopleList.innerHTML = "";
   incomeSelect.innerHTML = "";
   expenseSelect.innerHTML = "";
-  peopleList.innerHTML = "";
 
-  people.forEach(p => {
+  data.people.forEach((p, i) => {
+    peopleList.innerHTML += `
+      <li>${p} <button onclick="deletePerson(${i})">❌</button></li>
+    `;
+
     incomeSelect.innerHTML += `<option>${p}</option>`;
     expenseSelect.innerHTML += `<option>${p}</option>`;
-    peopleList.innerHTML += `<li>${p}</li>`;
   });
 
   let totalIncome = 0;
   let totalExpense = 0;
 
-  transactions.forEach((t, i) => {
+  document.getElementById("incomeList").innerHTML = "";
+  document.getElementById("expenseList").innerHTML = "";
+
+  data.transactions.forEach((t, i) => {
     const html = `
       <div class="item">
         <span>${t.person} - $${formatMoney(t.amount)}</span>
-        <div class="actions">
-          <button onclick="editTransaction(${i})">✏️</button>
-          <button onclick="deleteTransaction(${i})">❌</button>
-        </div>
       </div>
     `;
 
     if (t.type === "income") {
       totalIncome += t.amount;
-      incomeList.innerHTML += html;
+      document.getElementById("incomeList").innerHTML += html;
     } else {
       totalExpense += t.amount;
-      expenseList.innerHTML += html;
+      document.getElementById("expenseList").innerHTML += html;
     }
   });
 
   document.getElementById("totalIncome").textContent = formatMoney(totalIncome);
   document.getElementById("totalExpense").textContent = formatMoney(totalExpense);
 
-  const balance = totalIncome - totalExpense;
   document.getElementById("balance").textContent =
-    "$ " + formatMoney(balance);
+    "$ " + formatMoney(totalIncome - totalExpense);
 }
 
+updateBudgetSelect();
 updateUI();
