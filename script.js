@@ -3,7 +3,9 @@ import {
   getFirestore,
   doc,
   setDoc,
-  onSnapshot
+  onSnapshot,
+  collection,
+  getDocs
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -21,8 +23,7 @@ const db = getFirestore(app);
 const ADMIN_PASSWORD = "1234";
 let role = "viewer";
 
-const params = new URLSearchParams(window.location.search);
-const budgetId = params.get("id") || "viaje";
+let currentProject = "default";
 
 let data = {
   people: [],
@@ -30,23 +31,63 @@ let data = {
 };
 
 function ref() {
-  return doc(db, "budgets", budgetId);
+  return doc(db, "budgets", currentProject);
 }
 
 async function save() {
   await setDoc(ref(), data);
 }
 
+async function loadProjects() {
+
+  const querySnapshot = await getDocs(collection(db, "budgets"));
+
+  const select = document.getElementById("projectSelect");
+  select.innerHTML = "";
+
+  querySnapshot.forEach((docSnap) => {
+    const option = document.createElement("option");
+    option.value = docSnap.id;
+    option.textContent = docSnap.id;
+    select.appendChild(option);
+  });
+
+  select.value = currentProject;
+}
+
 function listen() {
   onSnapshot(ref(), (snapshot) => {
+
     if (snapshot.exists()) {
       data = snapshot.data();
     } else {
       save();
     }
+
     updateUI();
   });
 }
+
+window.createProject = async function () {
+
+  const name = document.getElementById("newProject").value.trim();
+  if (!name) return;
+
+  currentProject = name;
+
+  await setDoc(doc(db, "budgets", name), {
+    people: [],
+    transactions: []
+  });
+
+  loadProjects();
+  listen();
+};
+
+document.getElementById("projectSelect").addEventListener("change", (e) => {
+  currentProject = e.target.value;
+  listen();
+});
 
 window.login = function () {
   const pass = document.getElementById("adminPass").value;
@@ -58,8 +99,12 @@ window.login = function () {
   }
 };
 
+function isAdmin() {
+  return role === "admin";
+}
+
 window.addPerson = function () {
-  if (role !== "admin") return;
+  if (!isAdmin()) return;
 
   const name = document.getElementById("personName").value.trim();
   if (!name) return;
@@ -69,20 +114,18 @@ window.addPerson = function () {
 };
 
 window.deletePerson = function (index) {
-  if (role !== "admin") return;
+  if (!isAdmin()) return;
 
   const name = data.people[index];
 
   data.people.splice(index, 1);
-
-  // eliminar transacciones asociadas
   data.transactions = data.transactions.filter(t => t.person !== name);
 
   save();
 };
 
 window.addTransaction = function (type) {
-  if (role !== "admin") return;
+  if (!isAdmin()) return;
 
   const person = document.getElementById(
     type === "income" ? "incomePerson" : "expensePerson"
@@ -94,17 +137,14 @@ window.addTransaction = function (type) {
     ).value
   );
 
-  if (!person || !amount) {
-    alert("Selecciona persona y monto");
-    return;
-  }
+  if (!person || !amount) return;
 
   data.transactions.push({ person, amount, type });
   save();
 };
 
 window.deleteTransaction = function (index) {
-  if (role !== "admin") return;
+  if (!isAdmin()) return;
 
   data.transactions.splice(index, 1);
   save();
@@ -123,8 +163,6 @@ function updateUI() {
   const incomeSelect = document.getElementById("incomePerson");
   const expenseSelect = document.getElementById("expensePerson");
 
-  if (!peopleList) return;
-
   peopleList.innerHTML = "";
   incomeSelect.innerHTML = "";
   expenseSelect.innerHTML = "";
@@ -134,7 +172,7 @@ function updateUI() {
     peopleList.innerHTML += `
       <li>
         🤙 ${p}
-        ${role === "admin"
+        ${isAdmin()
           ? `<button class="btn-delete" onclick="deletePerson(${i})">✖</button>`
           : ""
         }
@@ -166,7 +204,7 @@ function updateUI() {
     const html = `
       <div class="item">
         <span>${t.type === "income" ? "🍻" : "💩"} ${t.person} - $${formatMoney(t.amount)}</span>
-        ${role === "admin"
+        ${isAdmin()
           ? `<button class="btn-delete" onclick="deleteTransaction(${i})">✖</button>`
           : ""
         }
@@ -189,4 +227,5 @@ function updateUI() {
     "$ " + formatMoney(totalIncome - totalExpense);
 }
 
+loadProjects();
 listen();
