@@ -52,11 +52,6 @@ button {
   border-bottom: 1px solid #eee;
 }
 
-.actions {
-  display: flex;
-  gap: 6px;
-}
-
 .btn-delete {
   background: #ff5252;
   color: white;
@@ -66,10 +61,6 @@ button {
   height: 26px;
   font-size: 14px;
   cursor: pointer;
-}
-
-.btn-delete:hover {
-  background: #ff0000;
 }
 
 .total {
