@@ -9,7 +9,7 @@ onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 
-// 🔥 PEGA TU CONFIG AQUÍ
+// 🔥 CONFIG FIREBASE
 const firebaseConfig = {
 apiKey: "TU_API_KEY",
 authDomain: "TU_DOMINIO",
@@ -20,7 +20,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 
-// ================= VARIABLES
+// ================= ESTADO GLOBAL
 
 let admin=false;
 let proyectoActual=null;
@@ -53,7 +53,7 @@ onSnapshot(proyectosRef,snap=>{
 
 const select=document.getElementById("proyectoSelect");
 
-select.innerHTML="";
+select.innerHTML='<option value="">Seleccionar</option>';
 
 snap.forEach(docu=>{
 
@@ -65,8 +65,15 @@ select.appendChild(opt);
 
 });
 
-if(select.value){
-cargarProyecto(select.value);
+});
+
+
+document.getElementById("proyectoSelect").addEventListener("change",e=>{
+
+proyectoActual=e.target.value;
+
+if(proyectoActual){
+cargarDatos();
 }
 
 });
@@ -74,10 +81,7 @@ cargarProyecto(select.value);
 
 window.crearProyecto=async()=>{
 
-if(!admin){
-alert("Solo admin");
-return;
-}
+if(!admin) return alert("Solo admin");
 
 const nombre=document.getElementById("nuevoProyecto").value;
 
@@ -88,10 +92,7 @@ await addDoc(proyectosRef,{nombre});
 
 window.eliminarProyecto=async()=>{
 
-if(!admin){
-alert("Solo admin");
-return;
-}
+if(!admin) return;
 
 if(!proyectoActual) return;
 
@@ -100,20 +101,14 @@ await deleteDoc(doc(db,"proyectos",proyectoActual));
 };
 
 
-document.getElementById("proyectoSelect").onchange=e=>{
+// ================= FUNCION PRINCIPAL
 
-cargarProyecto(e.target.value);
-
-};
-
-
-function cargarProyecto(id){
-
-proyectoActual=id;
+function cargarDatos(){
 
 escucharPersonas();
 escucharIngresos();
 escucharGastos();
+escucharDeudas();
 
 }
 
@@ -140,12 +135,16 @@ function escucharPersonas(){
 onSnapshot(personasRef(),snap=>{
 
 const lista=document.getElementById("listaPersonas");
-const select1=document.getElementById("selectIngreso");
-const select2=document.getElementById("selectGasto");
+const s1=document.getElementById("selectIngreso");
+const s2=document.getElementById("selectGasto");
+const d1=document.getElementById("deudor");
+const d2=document.getElementById("acreedor");
 
 lista.innerHTML="";
-select1.innerHTML="";
-select2.innerHTML="";
+s1.innerHTML="";
+s2.innerHTML="";
+d1.innerHTML="";
+d2.innerHTML="";
 
 snap.forEach(docu=>{
 
@@ -165,8 +164,10 @@ const opt=document.createElement("option");
 opt.value=data.nombre;
 opt.textContent=data.nombre;
 
-select1.appendChild(opt.cloneNode(true));
-select2.appendChild(opt.cloneNode(true));
+s1.appendChild(opt.cloneNode(true));
+s2.appendChild(opt.cloneNode(true));
+d1.appendChild(opt.cloneNode(true));
+d2.appendChild(opt.cloneNode(true));
 
 });
 
@@ -217,14 +218,14 @@ lista.innerHTML="";
 
 snap.forEach(docu=>{
 
-const data=docu.data();
-total+=data.monto;
+const d=docu.data();
+total+=d.monto;
 
 const div=document.createElement("div");
 div.className="item";
 
 div.innerHTML=`
-<span>🍻 ${data.nombre} - $${data.monto}</span>
+<span>🍻 ${d.nombre} - $${d.monto}</span>
 ${admin?`<div class="deleteBtn" onclick="eliminarIngreso('${docu.id}')">✖</div>`:""}
 `;
 
@@ -283,14 +284,14 @@ lista.innerHTML="";
 
 snap.forEach(docu=>{
 
-const data=docu.data();
-total+=data.monto;
+const d=docu.data();
+total+=d.monto;
 
 const div=document.createElement("div");
 div.className="item";
 
 div.innerHTML=`
-<span>💩 ${data.nombre} - $${data.monto}</span>
+<span>💩 ${d.nombre} - $${d.monto}</span>
 ${admin?`<div class="deleteBtn" onclick="eliminarGasto('${docu.id}')">✖</div>`:""}
 `;
 
@@ -316,16 +317,74 @@ await deleteDoc(doc(db,"proyectos",proyectoActual,"gastos",id));
 };
 
 
-// ================= BALANCE + RANKING
+// ================= DEUDAS
+
+function deudasRef(){
+return collection(db,"proyectos",proyectoActual,"deudas");
+}
+
+window.agregarDeuda=async()=>{
+
+if(!admin) return;
+
+const deudor=document.getElementById("deudor").value;
+const acreedor=document.getElementById("acreedor").value;
+const monto=parseFloat(document.getElementById("montoDeuda").value);
+
+await addDoc(deudasRef(),{
+deudor,
+acreedor,
+monto
+});
+
+};
+
+
+function escucharDeudas(){
+
+onSnapshot(deudasRef(),snap=>{
+
+const lista=document.getElementById("listaDeudas");
+lista.innerHTML="";
+
+snap.forEach(docu=>{
+
+const d=docu.data();
+
+const div=document.createElement("div");
+div.className="item";
+
+div.innerHTML=`
+<span>💸 ${d.deudor} debe a ${d.acreedor} $${d.monto}</span>
+${admin?`<div class="deleteBtn" onclick="eliminarDeuda('${docu.id}')">✖</div>`:""}
+`;
+
+lista.appendChild(div);
+
+});
+
+});
+
+}
+
+
+window.eliminarDeuda=async(id)=>{
+
+if(!admin) return;
+
+await deleteDoc(doc(db,"proyectos",proyectoActual,"deudas",id));
+
+};
+
+
+// ================= BALANCE
 
 function actualizarBalance(){
 
-const ingresos=parseFloat(document.getElementById("totalIngresos").innerText)||0;
-const gastos=parseFloat(document.getElementById("totalGastos").innerText)||0;
+const i=parseFloat(document.getElementById("totalIngresos").innerText)||0;
+const g=parseFloat(document.getElementById("totalGastos").innerText)||0;
 
-const balance=ingresos-gastos;
-
-document.getElementById("balance").innerText="$"+balance;
+document.getElementById("balance").innerText="$"+(i-g);
 
 }
 
@@ -334,10 +393,8 @@ document.getElementById("balance").innerText="$"+balance;
 
 window.compartirWhatsApp=()=>{
 
-const texto=`Balance actual: ${document.getElementById("balance").innerText}`;
+const texto=`Balance: ${document.getElementById("balance").innerText}`;
 
-const url=`https://wa.me/?text=${encodeURIComponent(texto)}`;
-
-window.open(url);
+window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`);
 
 };
