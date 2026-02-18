@@ -1,6 +1,7 @@
 body{
-font-family: Arial;
+font-family:Arial, Helvetica, sans-serif;
 background:#f2f2f2;
+margin:0;
 padding:15px;
 }
 
@@ -11,27 +12,34 @@ text-align:center;
 .card{
 background:white;
 padding:15px;
-margin-bottom:15px;
-border-radius:12px;
-box-shadow:0 2px 6px rgba(0,0,0,0.1);
+border-radius:15px;
+margin-bottom:20px;
+box-shadow:0 3px 8px rgba(0,0,0,0.1);
+}
+
+.balance{
+background:#dff5df;
+text-align:center;
 }
 
 input,select{
 width:100%;
-padding:10px;
-margin:5px 0;
-border-radius:8px;
+padding:12px;
+margin-top:8px;
+margin-bottom:10px;
+border-radius:10px;
 border:1px solid #ccc;
+font-size:16px;
 }
 
 button{
 width:100%;
 padding:12px;
-background:#4CAF50;
-color:white;
 border:none;
 border-radius:10px;
-font-weight:bold;
+background:#4CAF50;
+color:white;
+font-size:16px;
 margin-top:5px;
 }
 
@@ -43,10 +51,10 @@ background:#e74c3c;
 display:flex;
 justify-content:space-between;
 align-items:center;
-background:#f7f7f7;
 padding:10px;
+margin-top:8px;
+background:#f7f7f7;
 border-radius:10px;
-margin-top:5px;
 }
 
 .deleteBtn{
@@ -60,9 +68,4 @@ align-items:center;
 justify-content:center;
 font-weight:bold;
 cursor:pointer;
-}
-
-.resumen{
-background:#dff0d8;
-text-align:center;
 }
