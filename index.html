@@ -6,122 +6,102 @@
 <title>Gastos del Parche</title>
 
 <link rel="stylesheet" href="style.css">
-
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script type="module" src="script.js"></script>
 
 </head>
 
 <body>
 
-<div class="container">
-
 <h1>🍻 Gastos del Parche</h1>
 
-<!-- PROYECTOS -->
 <div class="card">
-<h2>📁 Proyecto</h2>
+<h2>📂 Proyecto</h2>
 
-<select id="selectProyecto"></select>
+<select id="proyectoSelect"></select>
 
-<div class="row">
 <input id="nuevoProyecto" placeholder="Nuevo proyecto">
+
 <button onclick="crearProyecto()">Crear</button>
-</div>
-
-<button onclick="eliminarProyecto()">Eliminar Proyecto</button>
-
+<button class="danger" onclick="eliminarProyecto()">Eliminar Proyecto</button>
 </div>
 
 
-<!-- ADMIN -->
 <div class="card">
 <h2>🔐 Acceso Admin</h2>
-<input type="password" id="adminPass" placeholder="Clave admin">
+
+<input id="claveAdmin" type="password" placeholder="Clave admin">
 <button onclick="loginAdmin()">Entrar</button>
-<p id="modoAdmin">Modo 👀 Solo ver</p>
+
+<p id="modoTexto">Modo 👀 Solo ver</p>
 </div>
 
 
-<!-- INTEGRANTES -->
 <div class="card">
-<h2>👥 Integrantes</h2>
+<h2>👍 Integrantes</h2>
 
-<div class="row">
-<input id="nombreIntegrante" placeholder="Nombre">
-<button onclick="agregarIntegrante()">Agregar</button>
+<input id="nombrePersona" placeholder="Nombre">
+<button onclick="agregarPersona()">Agregar</button>
+
+<ul id="listaPersonas"></ul>
 </div>
 
-<div id="listaIntegrantes"></div>
-</div>
 
-
-<!-- INGRESOS -->
 <div class="card">
 <h2>🍻 Quién puso</h2>
 
-<div class="row">
-<select id="selectIngreso"></select>
-<input id="montoIngreso" type="number" placeholder="Monto">
-</div>
+<select id="personaIngreso"></select>
+<input id="montoIngreso" placeholder="Monto">
 
 <button onclick="agregarIngreso()">Agregar</button>
 
-<h3 id="totalIngresos">Total: $ 0</h3>
-<div id="listaIngresos"></div>
+<h3>Total: <span id="totalIngresos">$ 0</span></h3>
 
+<ul id="listaIngresos"></ul>
 </div>
 
 
-<!-- GASTOS -->
 <div class="card">
 <h2>💩 En qué se fue</h2>
 
-<div class="row">
-<select id="selectGasto"></select>
-<input id="descGasto" placeholder="Descripción">
-</div>
+<select id="personaGasto"></select>
+<input id="montoGasto" placeholder="Monto">
 
-<div class="row">
-<input id="montoGasto" type="number" placeholder="Monto">
 <button onclick="agregarGasto()">Agregar</button>
+
+<h3>Total: <span id="totalGastos">$ 0</span></h3>
+
+<ul id="listaGastos"></ul>
 </div>
 
-<h3 id="totalGastos">Total: $ 0</h3>
-<div id="listaGastos"></div>
 
-</div>
-
-
-<!-- DEUDAS -->
 <div class="card">
-<h2>💸 Quién debe a quién</h2>
+<h2>💰 Balance</h2>
 
-<div class="row">
-<select id="deudor"></select>
-<select id="acreedor"></select>
-<input id="montoDeuda" type="number" placeholder="Monto">
-</div>
+<h1 id="balance">$ 0</h1>
 
-<button onclick="agregarDeuda()">Agregar</button>
-
-<div id="listaDeudas"></div>
+<button onclick="compartirWhatsApp()">📲 Compartir WhatsApp</button>
 </div>
 
 
-<!-- RANKING -->
 <div class="card">
 <h2>🏆 Ranking</h2>
-<div id="ranking"></div>
+
+<ul id="ranking"></ul>
 </div>
 
 
-<button class="whatsapp" onclick="enviarWhatsApp()">📲 Enviar resumen por WhatsApp</button>
+<div class="card">
+<h2>🤝 Quién debe a quién</h2>
 
+<select id="deudor"></select>
+<select id="acreedor"></select>
+
+<input id="montoDeuda" placeholder="Monto">
+
+<button onclick="agregarDeuda()">Guardar</button>
+
+<ul id="listaDeudas"></ul>
 </div>
-
-<script src="app.js"></script>
-<script src="script.js"></script>
 
 </body>
 </html>
