@@ -52,11 +52,12 @@ button {
   border-bottom: 1px solid #eee;
 }
 
+/* BOTÓN ELIMINAR MINIMALISTA */
 .btn-delete {
   background: transparent;
   border: none;
   color: #ff4d4d;
-  font-size: 18px;
+  font-size: 16px;
   cursor: pointer;
 }
 
