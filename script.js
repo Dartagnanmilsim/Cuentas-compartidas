@@ -28,7 +28,6 @@ const db = getFirestore(app);
 let admin = false;
 let proyectoActual = null;
 
-// 🔥 unsubscribe listeners
 let unsubPersonas = null;
 let unsubIngresos = null;
 let unsubGastos = null;
@@ -182,18 +181,61 @@ monto:Number(monto)
 };
 
 
-// ================= WHATSAPP =================
+// ================= WHATSAPP (NUEVO MENSAJE) =================
 
 window.compartirWhatsApp = () => {
 
-const texto=`Balance actual del parche: ${document.getElementById("balance").innerText}`;
+const ingresos = document.getElementById("totalIngresos").innerText;
+const gastos = document.getElementById("totalGastos").innerText;
+const balance = document.getElementById("balance").innerText;
+
+
+// Ranking
+let rankingTexto = "";
+document.querySelectorAll("#ranking li").forEach(li=>{
+rankingTexto += "\n" + li.innerText;
+});
+
+
+// Deudas
+let deudasTexto = "";
+document.querySelectorAll("#listaDeudas li").forEach(li=>{
+deudasTexto += "\n" + li.innerText;
+});
+
+
+const texto = `
+🚬💰 *Reunión de Alto Nivel — Organización del Parche*
+
+Caballeros:
+
+Los números ya hablaron.
+
+💰 Plata que entró: ${ingresos}  
+💸 Plata que salió: ${gastos}  
+📊 Balance del negocio: ${balance}  
+
+🏆 Los que pusieron la cara por la empresa:
+${rankingTexto || "Sin registros"}
+
+🤝 Deudas internas:
+${deudasTexto || "Sin pendientes"}
+
+⚖️ Decisión:
+La empresa sigue fuerte.
+La caja está viva.
+La fiesta continúa.
+
+Firmado,  
+La Junta 🍻😎
+`;
 
 window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`);
 
 };
 
 
-// ================= CARGAR DATOS =================
+// ================= LISTENERS =================
 
 function limpiarListeners(){
 
