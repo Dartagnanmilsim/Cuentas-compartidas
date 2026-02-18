@@ -14,7 +14,10 @@
 <div class="card">
   <h2>📂 Proyecto</h2>
 
-  <select id="projectSelect"></select>
+  <div class="project-row">
+    <select id="projectSelect"></select>
+    <button class="btn-delete-project" onclick="deleteProject()">🗑️</button>
+  </div>
 
   <input type="text" id="newProject" placeholder="Nuevo proyecto (solo admin)">
   <button onclick="createProject()">Crear</button>
@@ -28,7 +31,7 @@
   <p id="roleLabel">Modo: 👀 Solo ver</p>
 </div>
 
-<!-- PERSONAS (SOLO ADMIN) -->
+<!-- PERSONAS -->
 <div class="card admin hidden">
   <h2>🤙 El Combo</h2>
   <input type="text" id="personName" placeholder="Nombre">
@@ -38,7 +41,7 @@
 
 <div class="grid">
 
-  <!-- INGRESOS (TODOS VEN) -->
+  <!-- INGRESOS -->
   <div class="card">
     <h2>🍻 Quién puso</h2>
 
@@ -51,7 +54,7 @@
     <h3>Total: <span id="totalIncome">0</span></h3>
   </div>
 
-  <!-- GASTOS (TODOS VEN) -->
+  <!-- GASTOS -->
   <div class="card">
     <h2>💩 En qué se fue</h2>
 
