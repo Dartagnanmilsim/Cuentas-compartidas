@@ -137,7 +137,6 @@ window.deleteProject = async function () {
   if (unsubscribe) unsubscribe();
 
   await loadProjects();
-
   clearUI();
 };
 
@@ -237,7 +236,7 @@ function updateUI() {
       <li class="people-item">
         <div class="people-name">🤙 ${p}</div>
         ${isAdmin()
-          ? `<button class="btn-delete" onclick="deletePerson(${i})">✖</button>`
+          ? `<button class="btn-delete" onclick="deletePerson(${i})">✕</button>`
           : ""
         }
       </li>
@@ -269,7 +268,7 @@ function updateUI() {
       <div class="item">
         <span>${t.type === "income" ? "🍻" : "💩"} ${t.person} - $${formatMoney(t.amount)}</span>
         ${isAdmin()
-          ? `<button class="btn-delete" onclick="deleteTransaction(${i})">✖</button>`
+          ? `<button class="btn-delete" onclick="deleteTransaction(${i})">✕</button>`
           : ""
         }
       </div>
