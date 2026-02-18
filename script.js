@@ -1,4 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+
 import {
 getFirestore,
 collection,
@@ -20,11 +21,23 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 
-// ================= ESTADO GLOBAL
+// ================= FORMATO MONEDA
+
+function dinero(valor){
+
+return new Intl.NumberFormat('es-CO',{
+style:'currency',
+currency:'COP',
+minimumFractionDigits:2
+}).format(valor);
+
+}
+
+
+// ================= ESTADO
 
 let admin=false;
-let proyectoActual=null;
-
+let proyectoActual=localStorage.getItem("proyectoActivo")||null;
 const claveCorrecta="1234";
 
 
@@ -52,7 +65,6 @@ const proyectosRef=collection(db,"proyectos");
 onSnapshot(proyectosRef,snap=>{
 
 const select=document.getElementById("proyectoSelect");
-
 select.innerHTML='<option value="">Seleccionar</option>';
 
 snap.forEach(docu=>{
@@ -60,10 +72,16 @@ snap.forEach(docu=>{
 const opt=document.createElement("option");
 opt.value=docu.id;
 opt.textContent=docu.data().nombre;
-
 select.appendChild(opt);
 
 });
+
+if(proyectoActual){
+
+select.value=proyectoActual;
+cargarDatos();
+
+}
 
 });
 
@@ -72,9 +90,9 @@ document.getElementById("proyectoSelect").addEventListener("change",e=>{
 
 proyectoActual=e.target.value;
 
-if(proyectoActual){
-cargarDatos();
-}
+localStorage.setItem("proyectoActivo",proyectoActual);
+
+if(proyectoActual) cargarDatos();
 
 });
 
@@ -84,24 +102,32 @@ window.crearProyecto=async()=>{
 if(!admin) return alert("Solo admin");
 
 const nombre=document.getElementById("nuevoProyecto").value;
+if(!nombre) return;
 
-await addDoc(proyectosRef,{nombre});
+const docRef=await addDoc(proyectosRef,{nombre});
+
+proyectoActual=docRef.id;
+localStorage.setItem("proyectoActivo",proyectoActual);
+
+cargarDatos();
 
 };
 
 
 window.eliminarProyecto=async()=>{
 
-if(!admin) return;
-
-if(!proyectoActual) return;
+if(!admin || !proyectoActual) return;
 
 await deleteDoc(doc(db,"proyectos",proyectoActual));
+
+localStorage.removeItem("proyectoActivo");
+
+location.reload();
 
 };
 
 
-// ================= FUNCION PRINCIPAL
+// ================= CARGAR DATOS
 
 function cargarDatos(){
 
@@ -135,16 +161,10 @@ function escucharPersonas(){
 onSnapshot(personasRef(),snap=>{
 
 const lista=document.getElementById("listaPersonas");
-const s1=document.getElementById("selectIngreso");
-const s2=document.getElementById("selectGasto");
-const d1=document.getElementById("deudor");
-const d2=document.getElementById("acreedor");
+const selects=["selectIngreso","selectGasto","deudor","acreedor"];
 
 lista.innerHTML="";
-s1.innerHTML="";
-s2.innerHTML="";
-d1.innerHTML="";
-d2.innerHTML="";
+selects.forEach(id=>document.getElementById(id).innerHTML="");
 
 snap.forEach(docu=>{
 
@@ -160,14 +180,15 @@ ${admin?`<div class="deleteBtn" onclick="eliminarPersona('${docu.id}')">✖</div
 
 lista.appendChild(div);
 
+selects.forEach(id=>{
+
 const opt=document.createElement("option");
 opt.value=data.nombre;
 opt.textContent=data.nombre;
 
-s1.appendChild(opt.cloneNode(true));
-s2.appendChild(opt.cloneNode(true));
-d1.appendChild(opt.cloneNode(true));
-d2.appendChild(opt.cloneNode(true));
+document.getElementById(id).appendChild(opt);
+
+});
 
 });
 
@@ -212,7 +233,6 @@ function escucharIngresos(){
 onSnapshot(ingresosRef(),snap=>{
 
 let total=0;
-
 const lista=document.getElementById("listaIngresos");
 lista.innerHTML="";
 
@@ -225,7 +245,7 @@ const div=document.createElement("div");
 div.className="item";
 
 div.innerHTML=`
-<span>🍻 ${d.nombre} - $${d.monto}</span>
+<span>🍻 ${d.nombre} - ${dinero(d.monto)}</span>
 ${admin?`<div class="deleteBtn" onclick="eliminarIngreso('${docu.id}')">✖</div>`:""}
 `;
 
@@ -233,8 +253,7 @@ lista.appendChild(div);
 
 });
 
-document.getElementById("totalIngresos").innerText=total;
-
+document.getElementById("totalIngresos").innerText=dinero(total);
 actualizarBalance();
 
 });
@@ -278,7 +297,6 @@ function escucharGastos(){
 onSnapshot(gastosRef(),snap=>{
 
 let total=0;
-
 const lista=document.getElementById("listaGastos");
 lista.innerHTML="";
 
@@ -291,7 +309,7 @@ const div=document.createElement("div");
 div.className="item";
 
 div.innerHTML=`
-<span>💩 ${d.nombre} - $${d.monto}</span>
+<span>💩 ${d.nombre} - ${dinero(d.monto)}</span>
 ${admin?`<div class="deleteBtn" onclick="eliminarGasto('${docu.id}')">✖</div>`:""}
 `;
 
@@ -299,8 +317,7 @@ lista.appendChild(div);
 
 });
 
-document.getElementById("totalGastos").innerText=total;
-
+document.getElementById("totalGastos").innerText=dinero(total);
 actualizarBalance();
 
 });
@@ -315,6 +332,20 @@ if(!admin) return;
 await deleteDoc(doc(db,"proyectos",proyectoActual,"gastos",id));
 
 };
+
+
+// ================= BALANCE
+
+function actualizarBalance(){
+
+const ingresos=document.getElementById("totalIngresos").innerText.replace(/\D/g,"")||0;
+const gastos=document.getElementById("totalGastos").innerText.replace(/\D/g,"")||0;
+
+const total=(ingresos-gastos);
+
+document.getElementById("balance").innerText=dinero(total);
+
+}
 
 
 // ================= DEUDAS
@@ -355,7 +386,7 @@ const div=document.createElement("div");
 div.className="item";
 
 div.innerHTML=`
-<span>💸 ${d.deudor} debe a ${d.acreedor} $${d.monto}</span>
+<span>💸 ${d.deudor} debe a ${d.acreedor} ${dinero(d.monto)}</span>
 ${admin?`<div class="deleteBtn" onclick="eliminarDeuda('${docu.id}')">✖</div>`:""}
 `;
 
@@ -377,23 +408,11 @@ await deleteDoc(doc(db,"proyectos",proyectoActual,"deudas",id));
 };
 
 
-// ================= BALANCE
-
-function actualizarBalance(){
-
-const i=parseFloat(document.getElementById("totalIngresos").innerText)||0;
-const g=parseFloat(document.getElementById("totalGastos").innerText)||0;
-
-document.getElementById("balance").innerText="$"+(i-g);
-
-}
-
-
 // ================= WHATSAPP
 
 window.compartirWhatsApp=()=>{
 
-const texto=`Balance: ${document.getElementById("balance").innerText}`;
+const texto=`Balance del parche: ${document.getElementById("balance").innerText}`;
 
 window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`);
 
