@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gastos del Parche</title>
+
 <link rel="stylesheet" href="style.css">
 
 <script type="module" src="script.js"></script>
@@ -22,8 +23,7 @@
 <input id="nuevoProyecto" placeholder="Nuevo proyecto">
 
 <button onclick="crearProyecto()">Crear</button>
-
-<button onclick="eliminarProyecto()" class="danger">Eliminar Proyecto</button>
+<button class="danger" onclick="eliminarProyecto()">Eliminar Proyecto</button>
 
 </div>
 
@@ -60,6 +60,7 @@
 
 <select id="selectIngreso"></select>
 <input id="montoIngreso" placeholder="Monto">
+
 <button onclick="agregarIngreso()">Agregar</button>
 
 <div id="listaIngresos"></div>
@@ -75,6 +76,7 @@
 
 <select id="selectGasto"></select>
 <input id="montoGasto" placeholder="Monto">
+
 <button onclick="agregarGasto()">Agregar</button>
 
 <div id="listaGastos"></div>
@@ -87,6 +89,7 @@
 <div class="card resumen">
 
 <h2>🔥 Cómo vamos</h2>
+
 <h1 id="balance">0</h1>
 
 <button onclick="compartirWhatsApp()">📲 Compartir WhatsApp</button>
@@ -96,18 +99,15 @@
 
 <div class="card">
 
-<h2>🏆 Ranking del Parche</h2>
+<h2>💸 Quién debe a quién</h2>
 
-<div id="ranking"></div>
+<select id="deudor"></select>
+<select id="acreedor"></select>
+<input id="montoDeuda" placeholder="Monto">
 
-</div>
+<button onclick="agregarDeuda()">Agregar deuda</button>
 
-
-<div class="card">
-
-<h2>💸 Deudas</h2>
-
-<div id="deudas"></div>
+<div id="listaDeudas"></div>
 
 </div>
 
