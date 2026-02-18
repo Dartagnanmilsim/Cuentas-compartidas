@@ -25,6 +25,24 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 
+// 🎨 COLORES
+const colores = [
+"#ff4757",
+"#1e90ff",
+"#2ed573",
+"#e84393",
+"#ffa502",
+"#00cec9",
+"#fd9644",
+"#6c5ce7"
+];
+
+// 🎉 EMOJIS FIESTA
+const emojis = [
+"🍻","🍺","🎉","🕺","💃","😎","🔥","🚀","🥳","🍹"
+];
+
+
 let admin = false;
 let proyectoActual = null;
 
@@ -32,6 +50,8 @@ let unsubPersonas = null;
 let unsubIngresos = null;
 let unsubGastos = null;
 let unsubDeudas = null;
+
+let mapaPersonas = {};
 
 
 function formato(n){
@@ -117,9 +137,14 @@ if(!admin) return;
 const nombre=document.getElementById("nombrePersona").value;
 if(!nombre) return;
 
+const color = colores[Math.floor(Math.random()*colores.length)];
+const emoji = emojis[Math.floor(Math.random()*emojis.length)];
+
 await addDoc(collection(db,"personas"),{
 proyecto:proyectoActual,
-nombre
+nombre,
+color,
+emoji
 });
 
 };
@@ -181,52 +206,47 @@ monto:Number(monto)
 };
 
 
-// ================= WHATSAPP (NUEVO MENSAJE) =================
+// ================= WHATSAPP =================
 
 window.compartirWhatsApp = () => {
 
-const ingresos = document.getElementById("totalIngresos").innerText;
-const gastos = document.getElementById("totalGastos").innerText;
-const balance = document.getElementById("balance").innerText;
+const ingresos=document.getElementById("totalIngresos").innerText;
+const gastos=document.getElementById("totalGastos").innerText;
+const balance=document.getElementById("balance").innerText;
 
-
-// Ranking
-let rankingTexto = "";
+let rankingTexto="";
 document.querySelectorAll("#ranking li").forEach(li=>{
-rankingTexto += "\n" + li.innerText;
+rankingTexto+="\n"+li.innerText;
 });
 
-
-// Deudas
-let deudasTexto = "";
+let deudasTexto="";
 document.querySelectorAll("#listaDeudas li").forEach(li=>{
-deudasTexto += "\n" + li.innerText;
+deudasTexto+="\n"+li.innerText;
 });
 
-
-const texto = `
+const texto=`
 🚬💰 *Reunión de Alto Nivel — Organización del Parche*
 
 Caballeros:
 
 Los números ya hablaron.
 
-💰 Plata que entró: ${ingresos}  
-💸 Plata que salió: ${gastos}  
-📊 Balance del negocio: ${balance}  
+💰 Plata que entró: ${ingresos}
+💸 Plata que salió: ${gastos}
+📊 Balance del negocio: ${balance}
 
 🏆 Los que pusieron la cara por la empresa:
-${rankingTexto || "Sin registros"}
+${rankingTexto||"Sin registros"}
 
 🤝 Deudas internas:
-${deudasTexto || "Sin pendientes"}
+${deudasTexto||"Sin pendientes"}
 
 ⚖️ Decisión:
 La empresa sigue fuerte.
 La caja está viva.
 La fiesta continúa.
 
-Firmado,  
+Firmado,
 La Junta 🍻😎
 `;
 
@@ -253,7 +273,7 @@ limpiarListeners();
 
 
 // PERSONAS
-unsubPersonas = onSnapshot(collection(db,"personas"),snap=>{
+unsubPersonas=onSnapshot(collection(db,"personas"),snap=>{
 
 const lista=document.getElementById("listaPersonas");
 
@@ -268,23 +288,30 @@ s2.innerHTML="";
 s3.innerHTML="";
 s4.innerHTML="";
 
+mapaPersonas={};
+
 snap.forEach(docu=>{
 
 const d=docu.data();
 if(d.proyecto!==proyectoActual) return;
 
+mapaPersonas[d.nombre]=d;
+
 const li=document.createElement("li");
-li.textContent=d.nombre;
+
+li.innerHTML=`
+<span style="color:${d.color};font-weight:bold">
+${d.emoji || "🎉"} ${d.nombre}
+</span>
+`;
 
 if(admin){
 const btn=document.createElement("button");
 btn.textContent="X";
 btn.className="delete-btn";
-
 btn.onclick=async()=>{
 await deleteDoc(doc(db,"personas",docu.id));
 };
-
 li.appendChild(btn);
 }
 
@@ -303,7 +330,7 @@ sel.appendChild(op);
 
 
 // INGRESOS
-unsubIngresos = onSnapshot(collection(db,"ingresos"),snap=>{
+unsubIngresos=onSnapshot(collection(db,"ingresos"),snap=>{
 
 let total=0;
 const lista=document.getElementById("listaIngresos");
@@ -319,18 +346,24 @@ if(d.proyecto!==proyectoActual) return;
 total+=Number(d.monto);
 rankingTemp[d.persona]=(rankingTemp[d.persona]||0)+Number(d.monto);
 
+const persona=mapaPersonas[d.persona]||{};
+const color=persona.color||"#000";
+const emoji=persona.emoji||"🎉";
+
 const li=document.createElement("li");
-li.innerHTML=`${d.persona} → ${formato(d.monto)}`;
+li.innerHTML=`
+<span style="color:${color};font-weight:bold">
+${emoji} ${d.persona}
+</span> → ${formato(d.monto)}
+`;
 
 if(admin){
 const btn=document.createElement("button");
 btn.textContent="X";
 btn.className="delete-btn";
-
 btn.onclick=async()=>{
 await deleteDoc(doc(db,"ingresos",docu.id));
 };
-
 li.appendChild(btn);
 }
 
@@ -347,7 +380,7 @@ actualizarRanking(rankingTemp);
 
 
 // GASTOS
-unsubGastos = onSnapshot(collection(db,"gastos"),snap=>{
+unsubGastos=onSnapshot(collection(db,"gastos"),snap=>{
 
 let total=0;
 const lista=document.getElementById("listaGastos");
@@ -360,18 +393,24 @@ if(d.proyecto!==proyectoActual) return;
 
 total+=Number(d.monto);
 
+const persona=mapaPersonas[d.persona]||{};
+const color=persona.color||"#000";
+const emoji=persona.emoji||"🎉";
+
 const li=document.createElement("li");
-li.innerHTML=`${d.persona} → ${formato(d.monto)}`;
+li.innerHTML=`
+<span style="color:${color};font-weight:bold">
+${emoji} ${d.persona}
+</span> → ${formato(d.monto)}
+`;
 
 if(admin){
 const btn=document.createElement("button");
 btn.textContent="X";
 btn.className="delete-btn";
-
 btn.onclick=async()=>{
 await deleteDoc(doc(db,"gastos",docu.id));
 };
-
 li.appendChild(btn);
 }
 
@@ -387,7 +426,7 @@ actualizarBalance();
 
 
 // DEUDAS
-unsubDeudas = onSnapshot(collection(db,"deudas"),snap=>{
+unsubDeudas=onSnapshot(collection(db,"deudas"),snap=>{
 
 const lista=document.getElementById("listaDeudas");
 lista.innerHTML="";
@@ -397,18 +436,24 @@ snap.forEach(docu=>{
 const d=docu.data();
 if(d.proyecto!==proyectoActual) return;
 
+const persona=mapaPersonas[d.deudor]||{};
+const color=persona.color||"#000";
+const emoji=persona.emoji||"🎉";
+
 const li=document.createElement("li");
-li.innerHTML=`${d.deudor} debe ${formato(d.monto)} a ${d.acreedor}`;
+li.innerHTML=`
+<span style="color:${color};font-weight:bold">
+${emoji} ${d.deudor}
+</span> debe ${formato(d.monto)} a ${d.acreedor}
+`;
 
 if(admin){
 const btn=document.createElement("button");
 btn.textContent="X";
 btn.className="delete-btn";
-
 btn.onclick=async()=>{
 await deleteDoc(doc(db,"deudas",docu.id));
 };
-
 li.appendChild(btn);
 }
 
@@ -448,8 +493,17 @@ Object.entries(data)
 
 const medalla=i===0?"🥇":i===1?"🥈":i===2?"🥉":"";
 
+const p=mapaPersonas[persona]||{};
+const color=p.color||"#000";
+const emoji=p.emoji||"🎉";
+
 const li=document.createElement("li");
-li.textContent=`${medalla} ${persona} → ${formato(total)}`;
+li.innerHTML=`
+${medalla}
+<span style="color:${color};font-weight:bold">
+${emoji} ${persona}
+</span> → ${formato(total)}
+`;
 
 lista.appendChild(li);
 
