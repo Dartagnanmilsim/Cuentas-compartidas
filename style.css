@@ -59,14 +59,3 @@ button{
   align-items:center;
   justify-content:center;
 }
-
-.debt-item{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  background:#fafafa;
-  padding:12px;
-  border-radius:12px;
-  margin-top:8px;
-  border:1px solid #eee;
-}
