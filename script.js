@@ -22,7 +22,7 @@ const ADMIN_PASSWORD = "1234";
 let role = "viewer";
 
 const params = new URLSearchParams(window.location.search);
-const budgetId = params.get("id") || "default";
+const budgetId = params.get("id") || "viaje";
 
 let data = {
   people: [],
@@ -41,10 +41,10 @@ function listen() {
   onSnapshot(ref(), (snapshot) => {
     if (snapshot.exists()) {
       data = snapshot.data();
-      updateUI();
     } else {
       save();
     }
+    updateUI();
   });
 }
 
@@ -68,6 +68,19 @@ window.addPerson = function () {
   save();
 };
 
+window.deletePerson = function (index) {
+  if (role !== "admin") return;
+
+  const name = data.people[index];
+
+  data.people.splice(index, 1);
+
+  // eliminar transacciones asociadas
+  data.transactions = data.transactions.filter(t => t.person !== name);
+
+  save();
+};
+
 window.addTransaction = function (type) {
   if (role !== "admin") return;
 
@@ -81,7 +94,10 @@ window.addTransaction = function (type) {
     ).value
   );
 
-  if (!person || !amount) return;
+  if (!person || !amount) {
+    alert("Selecciona persona y monto");
+    return;
+  }
 
   data.transactions.push({ person, amount, type });
   save();
@@ -103,8 +119,6 @@ function formatMoney(n) {
 
 function updateUI() {
 
-  document.getElementById("shareLink").value = window.location.href;
-
   const peopleList = document.getElementById("peopleList");
   const incomeSelect = document.getElementById("incomePerson");
   const expenseSelect = document.getElementById("expensePerson");
@@ -115,10 +129,27 @@ function updateUI() {
   incomeSelect.innerHTML = "";
   expenseSelect.innerHTML = "";
 
-  data.people.forEach((p) => {
-    peopleList.innerHTML += `<li>🤙 ${p}</li>`;
-    incomeSelect.innerHTML += `<option>${p}</option>`;
-    expenseSelect.innerHTML += `<option>${p}</option>`;
+  data.people.forEach((p, i) => {
+
+    peopleList.innerHTML += `
+      <li>
+        🤙 ${p}
+        ${role === "admin"
+          ? `<button class="btn-delete" onclick="deletePerson(${i})">✖</button>`
+          : ""
+        }
+      </li>
+    `;
+
+    const opt1 = document.createElement("option");
+    opt1.value = p;
+    opt1.textContent = p;
+    incomeSelect.appendChild(opt1);
+
+    const opt2 = document.createElement("option");
+    opt2.value = p;
+    opt2.textContent = p;
+    expenseSelect.appendChild(opt2);
   });
 
   let totalIncome = 0;
