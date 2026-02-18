@@ -11,16 +11,19 @@
 <h1>🍻 Gastos del Parche</h1>
 
 <div class="card">
-  <h2>🔐 Acceso</h2>
-  <input type="password" id="adminPass" placeholder="Clave admin">
-  <button onclick="login()">Entrar</button>
-  <p id="roleLabel">Modo: 👀 Solo mirar</p>
+  <h2>📂 Proyecto</h2>
+
+  <select id="projectSelect"></select>
+
+  <input type="text" id="newProject" placeholder="Nuevo proyecto">
+  <button onclick="createProject()">Crear</button>
 </div>
 
 <div class="card">
-  <h2>✈️ Plan del viaje</h2>
-  <p>Comparte este link con tus amigos:</p>
-  <input type="text" id="shareLink" readonly>
+  <h2>🔐 Acceso Admin</h2>
+  <input type="password" id="adminPass" placeholder="Clave admin">
+  <button onclick="login()">Entrar</button>
+  <p id="roleLabel">Modo: 👀 Solo ver</p>
 </div>
 
 <div class="card admin hidden">
