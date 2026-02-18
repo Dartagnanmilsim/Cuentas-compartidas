@@ -13,27 +13,25 @@
 <div class="card">
   <h2>📂 Proyecto</h2>
 
-  <div class="project-row">
-    <select id="projectSelect"></select>
-    <button class="btn-delete-project" onclick="deleteProject()">🗑️</button>
-  </div>
+  <select id="projectSelect"></select>
 
-  <input type="text" id="newProject" placeholder="Nuevo proyecto (solo admin)">
+  <input type="text" id="newProject" placeholder="Nuevo proyecto">
   <button onclick="createProject()">Crear</button>
 </div>
 
 <div class="card">
-  <h2>🔐 Acceso Admin</h2>
-  <input type="password" id="adminPass" placeholder="Clave admin">
+  <h2>🔐 Admin</h2>
+  <input type="password" id="adminPass" placeholder="Clave">
   <button onclick="login()">Entrar</button>
-  <p id="roleLabel">Modo: 👀 Solo ver</p>
+  <p id="roleLabel">Modo 👀 Solo ver</p>
 </div>
 
-<!-- PERSONAS -->
 <div class="card admin hidden">
   <h2>🤙 El Combo</h2>
+
   <input type="text" id="personName" placeholder="Nombre">
   <button onclick="addPerson()">Agregar</button>
+
   <div id="peopleList"></div>
 </div>
 
@@ -68,18 +66,14 @@
 <div class="card total">
   <h2>🔥 Cómo vamos</h2>
   <h3 id="balance">$0</h3>
-  <p id="funMessage"></p>
 
   <button onclick="shareWhatsApp()">📲 Compartir WhatsApp</button>
 </div>
 
-<!-- RANKING -->
 <div class="card">
   <h2>🏆 Ranking del Parche</h2>
   <div id="ranking"></div>
 </div>
-
-<div id="party"></div>
 
 <script type="module" src="script.js"></script>
 
