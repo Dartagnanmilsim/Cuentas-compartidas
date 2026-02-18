@@ -53,13 +53,10 @@ button {
 }
 
 .btn-delete {
-  background: #ff5252;
-  color: white;
+  background: transparent;
   border: none;
-  border-radius: 50%;
-  width: 26px;
-  height: 26px;
-  font-size: 14px;
+  color: #ff4d4d;
+  font-size: 18px;
   cursor: pointer;
 }
 
