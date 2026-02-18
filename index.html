@@ -2,72 +2,70 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>🍻 Gastos del Parche</title>
+  <title>Gastos del Parche</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
 <h1>🍻 Gastos del Parche</h1>
 
 <div class="card">
-  <h2>📂 Proyecto</h2>
-
+  <h2>📁 Proyecto</h2>
   <select id="projectSelect"></select>
-
-  <input type="text" id="newProject" placeholder="Nuevo proyecto">
-  <button onclick="createProject()">Crear</button>
+  <input id="newProjectName" placeholder="Nuevo proyecto">
+  <button id="createProjectBtn">Crear</button>
 </div>
 
 <div class="card">
-  <h2>🔐 Admin</h2>
-  <input type="password" id="adminPass" placeholder="Clave">
-  <button onclick="login()">Entrar</button>
-  <p id="roleLabel">Modo 👀 Solo ver</p>
+  <h2>🔐 Acceso Admin</h2>
+  <input id="adminPass" type="password" placeholder="Clave admin">
+  <button id="loginBtn">Entrar</button>
+  <p id="modeText">Modo 👀 Solo ver</p>
 </div>
 
-<div class="card admin hidden">
+<div class="card">
   <h2>🤙 El Combo</h2>
-
-  <input type="text" id="personName" placeholder="Nombre">
-  <button onclick="addPerson()">Agregar</button>
-
+  <input id="personName" placeholder="Nombre">
+  <button id="addPersonBtn">Agregar</button>
   <div id="peopleList"></div>
 </div>
 
-<div class="grid">
-
-  <div class="card">
-    <h2>🍻 Quién puso</h2>
-
-    <select id="incomePerson"></select>
-    <input type="number" id="incomeAmount" placeholder="Monto">
-
-    <button onclick="addTransaction('income')">Agregar</button>
-
-    <div id="incomeList"></div>
-    <h3>Total: <span id="totalIncome">0</span></h3>
-  </div>
-
-  <div class="card">
-    <h2>💩 En qué se fue</h2>
-
-    <select id="expensePerson"></select>
-    <input type="number" id="expenseAmount" placeholder="Monto">
-
-    <button onclick="addTransaction('expense')">Agregar</button>
-
-    <div id="expenseList"></div>
-    <h3>Total: <span id="totalExpense">0</span></h3>
-  </div>
-
+<div class="card">
+  <h2>🍻 Quién puso</h2>
+  <select id="incomePerson"></select>
+  <input id="incomeAmount" type="number" placeholder="Monto">
+  <button id="addIncomeBtn">Agregar</button>
+  <div id="incomeList"></div>
+  <h3>Total: <span id="incomeTotal">0</span></h3>
 </div>
 
-<div class="card total">
-  <h2>🔥 Cómo vamos</h2>
-  <h3 id="balance">$0</h3>
+<div class="card">
+  <h2>💩 En qué se fue</h2>
+  <select id="expensePerson"></select>
+  <input id="expenseAmount" type="number" placeholder="Monto">
+  <button id="addExpenseBtn">Agregar</button>
+  <div id="expenseList"></div>
+  <h3>Total: <span id="expenseTotal">0</span></h3>
+</div>
 
-  <button onclick="shareWhatsApp()">📲 Compartir WhatsApp</button>
+<div class="card highlight">
+  <h2>🔥 Cómo vamos</h2>
+  <h1 id="balanceTotal">$0</h1>
+  <button id="shareBtn">📲 Compartir WhatsApp</button>
+</div>
+
+<div class="card">
+  <h2>💸 Quién debe a quién</h2>
+
+  <select id="debtFrom"></select>
+  <select id="debtTo"></select>
+  <input id="debtAmount" type="number" placeholder="Monto">
+
+  <button id="addDebtBtn">Agregar deuda</button>
+
+  <div id="debtsList"></div>
 </div>
 
 <div class="card">
@@ -75,20 +73,6 @@
   <div id="ranking"></div>
 </div>
 
-<div class="card">
-  <h2>💰 Quién debe a quién</h2>
-  <div id="debts"></div>
-</div>
-
-<div id="modal" class="modal hidden">
-  <div class="modal-content">
-    <h3 id="modalTitle"></h3>
-    <div id="modalBody"></div>
-    <button onclick="closeModal()">Cerrar</button>
-  </div>
-</div>
-
-<script type="module" src="script.js"></script>
-
+<script type="module" src="app.js"></script>
 </body>
 </html>
