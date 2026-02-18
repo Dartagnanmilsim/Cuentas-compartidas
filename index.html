@@ -9,6 +9,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 </head>
 
 <body>
@@ -16,6 +17,22 @@
 <div class="container">
 
 <h1>🍻 Gastos del Parche</h1>
+
+<!-- PROYECTOS -->
+<div class="card">
+<h2>📁 Proyecto</h2>
+
+<select id="selectProyecto"></select>
+
+<div class="row">
+<input id="nuevoProyecto" placeholder="Nuevo proyecto">
+<button onclick="crearProyecto()">Crear</button>
+</div>
+
+<button onclick="eliminarProyecto()">Eliminar Proyecto</button>
+
+</div>
+
 
 <!-- ADMIN -->
 <div class="card">
@@ -31,7 +48,7 @@
 <h2>👥 Integrantes</h2>
 
 <div class="row">
-<input type="text" id="nombreIntegrante" placeholder="Nombre">
+<input id="nombreIntegrante" placeholder="Nombre">
 <button onclick="agregarIntegrante()">Agregar</button>
 </div>
 
@@ -45,13 +62,13 @@
 
 <div class="row">
 <select id="selectIngreso"></select>
-<input type="number" id="montoIngreso" placeholder="Monto">
+<input id="montoIngreso" type="number" placeholder="Monto">
 </div>
 
 <button onclick="agregarIngreso()">Agregar</button>
 
 <h3 id="totalIngresos">Total: $ 0</h3>
-<div id="detalleIngresos"></div>
+<div id="listaIngresos"></div>
 
 </div>
 
@@ -62,16 +79,16 @@
 
 <div class="row">
 <select id="selectGasto"></select>
-<input type="text" id="descGasto" placeholder="Descripción">
+<input id="descGasto" placeholder="Descripción">
 </div>
 
 <div class="row">
-<input type="number" id="montoGasto" placeholder="Monto">
+<input id="montoGasto" type="number" placeholder="Monto">
 <button onclick="agregarGasto()">Agregar</button>
 </div>
 
 <h3 id="totalGastos">Total: $ 0</h3>
-<div id="detalleGastos"></div>
+<div id="listaGastos"></div>
 
 </div>
 
@@ -83,10 +100,11 @@
 <div class="row">
 <select id="deudor"></select>
 <select id="acreedor"></select>
-<input type="number" id="montoDeuda" placeholder="Monto">
+<input id="montoDeuda" type="number" placeholder="Monto">
 </div>
 
 <button onclick="agregarDeuda()">Agregar</button>
+
 <div id="listaDeudas"></div>
 </div>
 
@@ -96,6 +114,7 @@
 <h2>🏆 Ranking</h2>
 <div id="ranking"></div>
 </div>
+
 
 <button class="whatsapp" onclick="enviarWhatsApp()">📲 Enviar resumen por WhatsApp</button>
 
