@@ -1,419 +1,332 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
-getFirestore,
-collection,
-addDoc,
-deleteDoc,
-doc,
-onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  getFirestore,
+  collection,
+  addDoc,
+  deleteDoc,
+  doc,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 
-// 🔥 CONFIG FIREBASE
 const firebaseConfig = {
-apiKey: "TU_API_KEY",
-authDomain: "TU_DOMINIO",
-projectId: "TU_PROJECT_ID"
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_DOMAIN",
+  projectId: "TU_PROJECT_ID"
 };
+
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 
-// ================= FORMATO MONEDA
+let admin = false;
+let proyectoActual = localStorage.getItem("proyecto") || "";
 
-function dinero(valor){
 
-return new Intl.NumberFormat('es-CO',{
-style:'currency',
-currency:'COP',
-minimumFractionDigits:2
-}).format(valor);
-
+function formato(n) {
+  return "$" + Number(n).toLocaleString("es-CO");
 }
 
 
-// ================= ESTADO
+window.loginAdmin = () => {
 
-let admin=false;
-let proyectoActual=localStorage.getItem("proyectoActivo")||null;
-const claveCorrecta="1234";
+  const clave = document.getElementById("claveAdmin").value;
 
-
-// ================= ADMIN
-
-window.loginAdmin=()=>{
-
-const clave=document.getElementById("claveAdmin").value;
-
-if(clave===claveCorrecta){
-admin=true;
-document.getElementById("modoTexto").innerText="Modo 👑 Admin";
-alert("Admin activado");
-}else{
-alert("Clave incorrecta");
-}
+  if (clave === "1234") {
+    admin = true;
+    document.getElementById("modoTexto").innerText = "Modo 👑 Admin";
+  } else {
+    alert("Clave incorrecta");
+  }
 
 };
 
 
-// ================= PROYECTOS
+const proyectosRef = collection(db, "proyectos");
 
-const proyectosRef=collection(db,"proyectos");
+onSnapshot(proyectosRef, snap => {
 
-onSnapshot(proyectosRef,snap=>{
+  const select = document.getElementById("proyectoSelect");
 
-const select=document.getElementById("proyectoSelect");
-select.innerHTML='<option value="">Seleccionar</option>';
+  select.innerHTML = '<option value="">Seleccionar proyecto</option>';
 
-snap.forEach(docu=>{
+  snap.forEach(docu => {
 
-const opt=document.createElement("option");
-opt.value=docu.id;
-opt.textContent=docu.data().nombre;
-select.appendChild(opt);
+    const data = docu.data();
 
-});
+    const opt = document.createElement("option");
+    opt.value = docu.id;
+    opt.textContent = data.nombre;
 
-if(proyectoActual){
+    select.appendChild(opt);
 
-select.value=proyectoActual;
-cargarDatos();
-
-}
+  });
 
 });
 
 
-document.getElementById("proyectoSelect").addEventListener("change",e=>{
+document.getElementById("proyectoSelect")
+.addEventListener("change", e => {
 
-proyectoActual=e.target.value;
+  proyectoActual = e.target.value;
+  localStorage.setItem("proyecto", proyectoActual);
 
-localStorage.setItem("proyectoActivo",proyectoActual);
-
-if(proyectoActual) cargarDatos();
+  cargarDatos();
 
 });
 
 
-window.crearProyecto=async()=>{
+window.crearProyecto = async () => {
 
-if(!admin) return alert("Solo admin");
+  if (!admin) return alert("Solo admin");
 
-const nombre=document.getElementById("nuevoProyecto").value;
-if(!nombre) return;
+  const nombre = document.getElementById("nuevoProyecto").value;
 
-const docRef=await addDoc(proyectosRef,{nombre});
+  if (!nombre) return;
 
-proyectoActual=docRef.id;
-localStorage.setItem("proyectoActivo",proyectoActual);
+  const ref = await addDoc(collection(db, "proyectos"), {
+    nombre
+  });
 
-cargarDatos();
+  proyectoActual = ref.id;
+
+  localStorage.setItem("proyecto", proyectoActual);
+
+  cargarDatos();
 
 };
 
 
-window.eliminarProyecto=async()=>{
+window.eliminarProyecto = async () => {
 
-if(!admin || !proyectoActual) return;
+  if (!admin) return;
 
-await deleteDoc(doc(db,"proyectos",proyectoActual));
+  if (!proyectoActual) return;
 
-localStorage.removeItem("proyectoActivo");
+  await deleteDoc(doc(db, "proyectos", proyectoActual));
 
-location.reload();
+  proyectoActual = "";
 
-};
-
-
-// ================= CARGAR DATOS
-
-function cargarDatos(){
-
-escucharPersonas();
-escucharIngresos();
-escucharGastos();
-escucharDeudas();
-
-}
-
-
-// ================= PERSONAS
-
-function personasRef(){
-return collection(db,"proyectos",proyectoActual,"personas");
-}
-
-window.agregarPersona=async()=>{
-
-if(!admin) return;
-
-const nombre=document.getElementById("nombreInput").value;
-
-await addDoc(personasRef(),{nombre});
+  localStorage.removeItem("proyecto");
 
 };
 
 
-function escucharPersonas(){
+function cargarDatos() {
 
-onSnapshot(personasRef(),snap=>{
+  if (!proyectoActual) return;
 
-const lista=document.getElementById("listaPersonas");
-const selects=["selectIngreso","selectGasto","deudor","acreedor"];
-
-lista.innerHTML="";
-selects.forEach(id=>document.getElementById(id).innerHTML="");
-
-snap.forEach(docu=>{
-
-const data=docu.data();
-
-const div=document.createElement("div");
-div.className="item";
-
-div.innerHTML=`
-<span>👍 ${data.nombre}</span>
-${admin?`<div class="deleteBtn" onclick="eliminarPersona('${docu.id}')">✖</div>`:""}
-`;
-
-lista.appendChild(div);
-
-selects.forEach(id=>{
-
-const opt=document.createElement("option");
-opt.value=data.nombre;
-opt.textContent=data.nombre;
-
-document.getElementById(id).appendChild(opt);
-
-});
-
-});
-
-});
+  cargarPersonas();
+  cargarIngresos();
+  cargarEgresos();
 
 }
 
 
-window.eliminarPersona=async(id)=>{
 
-if(!admin) return;
+function cargarPersonas() {
 
-await deleteDoc(doc(db,"proyectos",proyectoActual,"personas",id));
+  const ref = collection(db, "proyectos", proyectoActual, "personas");
 
-};
+  onSnapshot(ref, snap => {
 
+    const div = document.getElementById("listaPersonas");
+    const sel1 = document.getElementById("personaIngreso");
+    const sel2 = document.getElementById("personaEgreso");
 
-// ================= INGRESOS
+    div.innerHTML = "";
+    sel1.innerHTML = "";
+    sel2.innerHTML = "";
 
-function ingresosRef(){
-return collection(db,"proyectos",proyectoActual,"ingresos");
-}
+    snap.forEach(d => {
 
-window.agregarIngreso=async()=>{
+      const data = d.data();
 
-if(!admin) return;
+      const item = document.createElement("div");
+      item.className = "item";
 
-const nombre=document.getElementById("selectIngreso").value;
-const monto=parseFloat(document.getElementById("montoIngreso").value);
+      item.innerHTML = `
+        ${data.nombre}
+        ${admin ? `<button class="delete" onclick="eliminarPersona('${d.id}')">X</button>` : ""}
+      `;
 
-await addDoc(ingresosRef(),{
-nombre,
-monto,
-fecha:new Date()
-});
+      div.appendChild(item);
 
-};
+      const opt1 = document.createElement("option");
+      opt1.value = data.nombre;
+      opt1.textContent = data.nombre;
 
+      const opt2 = opt1.cloneNode(true);
 
-function escucharIngresos(){
+      sel1.appendChild(opt1);
+      sel2.appendChild(opt2);
 
-onSnapshot(ingresosRef(),snap=>{
+    });
 
-let total=0;
-const lista=document.getElementById("listaIngresos");
-lista.innerHTML="";
-
-snap.forEach(docu=>{
-
-const d=docu.data();
-total+=d.monto;
-
-const div=document.createElement("div");
-div.className="item";
-
-div.innerHTML=`
-<span>🍻 ${d.nombre} - ${dinero(d.monto)}</span>
-${admin?`<div class="deleteBtn" onclick="eliminarIngreso('${docu.id}')">✖</div>`:""}
-`;
-
-lista.appendChild(div);
-
-});
-
-document.getElementById("totalIngresos").innerText=dinero(total);
-actualizarBalance();
-
-});
+  });
 
 }
 
 
-window.eliminarIngreso=async(id)=>{
+window.agregarPersona = async () => {
 
-if(!admin) return;
+  if (!admin) return;
 
-await deleteDoc(doc(db,"proyectos",proyectoActual,"ingresos",id));
+  const nombre = document.getElementById("nombrePersona").value;
 
-};
-
-
-// ================= GASTOS
-
-function gastosRef(){
-return collection(db,"proyectos",proyectoActual,"gastos");
-}
-
-window.agregarGasto=async()=>{
-
-if(!admin) return;
-
-const nombre=document.getElementById("selectGasto").value;
-const monto=parseFloat(document.getElementById("montoGasto").value);
-
-await addDoc(gastosRef(),{
-nombre,
-monto,
-fecha:new Date()
-});
+  await addDoc(
+    collection(db, "proyectos", proyectoActual, "personas"),
+    { nombre }
+  );
 
 };
 
 
-function escucharGastos(){
+window.eliminarPersona = async (id) => {
 
-onSnapshot(gastosRef(),snap=>{
+  if (!admin) return;
 
-let total=0;
-const lista=document.getElementById("listaGastos");
-lista.innerHTML="";
+  await deleteDoc(
+    doc(db, "proyectos", proyectoActual, "personas", id)
+  );
 
-snap.forEach(docu=>{
+};
 
-const d=docu.data();
-total+=d.monto;
 
-const div=document.createElement("div");
-div.className="item";
+function cargarIngresos() {
 
-div.innerHTML=`
-<span>💩 ${d.nombre} - ${dinero(d.monto)}</span>
-${admin?`<div class="deleteBtn" onclick="eliminarGasto('${docu.id}')">✖</div>`:""}
-`;
+  const ref = collection(db, "proyectos", proyectoActual, "ingresos");
 
-lista.appendChild(div);
+  onSnapshot(ref, snap => {
 
-});
+    let total = 0;
+    const div = document.getElementById("listaIngresos");
+    div.innerHTML = "";
 
-document.getElementById("totalGastos").innerText=dinero(total);
-actualizarBalance();
+    snap.forEach(d => {
 
-});
+      const data = d.data();
+
+      total += Number(data.monto);
+
+      const item = document.createElement("div");
+      item.className = "item";
+
+      item.innerHTML = `
+        ${data.persona} - ${formato(data.monto)}
+        ${admin ? `<button class="delete" onclick="eliminarIngreso('${d.id}')">X</button>` : ""}
+      `;
+
+      div.appendChild(item);
+
+    });
+
+    document.getElementById("totalIngresos").innerText = formato(total);
+    calcularBalance();
+
+  });
 
 }
 
 
-window.eliminarGasto=async(id)=>{
+window.agregarIngreso = async () => {
 
-if(!admin) return;
+  if (!admin) return;
 
-await deleteDoc(doc(db,"proyectos",proyectoActual,"gastos",id));
+  const persona = document.getElementById("personaIngreso").value;
+  const monto = document.getElementById("montoIngreso").value;
+
+  await addDoc(
+    collection(db, "proyectos", proyectoActual, "ingresos"),
+    { persona, monto }
+  );
 
 };
 
 
-// ================= BALANCE
+window.eliminarIngreso = async (id) => {
 
-function actualizarBalance(){
+  if (!admin) return;
 
-const ingresos=document.getElementById("totalIngresos").innerText.replace(/\D/g,"")||0;
-const gastos=document.getElementById("totalGastos").innerText.replace(/\D/g,"")||0;
+  await deleteDoc(
+    doc(db, "proyectos", proyectoActual, "ingresos", id)
+  );
 
-const total=(ingresos-gastos);
+};
 
-document.getElementById("balance").innerText=dinero(total);
+
+
+function cargarEgresos() {
+
+  const ref = collection(db, "proyectos", proyectoActual, "egresos");
+
+  onSnapshot(ref, snap => {
+
+    let total = 0;
+    const div = document.getElementById("listaEgresos");
+    div.innerHTML = "";
+
+    snap.forEach(d => {
+
+      const data = d.data();
+
+      total += Number(data.monto);
+
+      const item = document.createElement("div");
+      item.className = "item";
+
+      item.innerHTML = `
+        ${data.persona} - ${formato(data.monto)}
+        ${admin ? `<button class="delete" onclick="eliminarEgreso('${d.id}')">X</button>` : ""}
+      `;
+
+      div.appendChild(item);
+
+    });
+
+    document.getElementById("totalEgresos").innerText = formato(total);
+    calcularBalance();
+
+  });
 
 }
 
 
-// ================= DEUDAS
+window.agregarEgreso = async () => {
 
-function deudasRef(){
-return collection(db,"proyectos",proyectoActual,"deudas");
-}
+  if (!admin) return;
 
-window.agregarDeuda=async()=>{
+  const persona = document.getElementById("personaEgreso").value;
+  const monto = document.getElementById("montoEgreso").value;
 
-if(!admin) return;
-
-const deudor=document.getElementById("deudor").value;
-const acreedor=document.getElementById("acreedor").value;
-const monto=parseFloat(document.getElementById("montoDeuda").value);
-
-await addDoc(deudasRef(),{
-deudor,
-acreedor,
-monto
-});
+  await addDoc(
+    collection(db, "proyectos", proyectoActual, "egresos"),
+    { persona, monto }
+  );
 
 };
 
 
-function escucharDeudas(){
+window.eliminarEgreso = async (id) => {
 
-onSnapshot(deudasRef(),snap=>{
+  if (!admin) return;
 
-const lista=document.getElementById("listaDeudas");
-lista.innerHTML="";
+  await deleteDoc(
+    doc(db, "proyectos", proyectoActual, "egresos", id)
+  );
 
-snap.forEach(docu=>{
+};
 
-const d=docu.data();
 
-const div=document.createElement("div");
-div.className="item";
+function calcularBalance() {
 
-div.innerHTML=`
-<span>💸 ${d.deudor} debe a ${d.acreedor} ${dinero(d.monto)}</span>
-${admin?`<div class="deleteBtn" onclick="eliminarDeuda('${docu.id}')">✖</div>`:""}
-`;
+  const ingresos = document.getElementById("totalIngresos").innerText.replace(/\D/g,"");
+  const egresos = document.getElementById("totalEgresos").innerText.replace(/\D/g,"");
 
-lista.appendChild(div);
+  const total = ingresos - egresos;
 
-});
-
-});
+  document.getElementById("balanceTotal").innerText = formato(total);
 
 }
-
-
-window.eliminarDeuda=async(id)=>{
-
-if(!admin) return;
-
-await deleteDoc(doc(db,"proyectos",proyectoActual,"deudas",id));
-
-};
-
-
-// ================= WHATSAPP
-
-window.compartirWhatsApp=()=>{
-
-const texto=`Balance del parche: ${document.getElementById("balance").innerText}`;
-
-window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`);
-
-};
