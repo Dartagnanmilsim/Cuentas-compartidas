@@ -1,298 +1,438 @@
-import { ref, push, onValue, remove, set } 
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+// =============================
+// VARIABLES GLOBALES
+// =============================
 
-const db = window.db;
-const proyecto = "default";
+let proyectoActual = null
+let esAdmin = false
 
-let personas = [];
-let ingresos = [];
-let gastos = [];
+let personas = {}
+let ingresos = {}
+let gastos = {}
+let deudas = {}
 
-/* COLORES */
+const ADMIN_PASSWORD = "1234"
 
-function colorPersona(nombre){
-const index = personas.findIndex(p=>p.nombre===nombre);
-return "color-"+(index%5);
+// =============================
+// FORMATO MONEDA
+// =============================
+
+function moneda(valor) {
+  return "$ " + Number(valor || 0).toLocaleString("es-CO")
 }
 
-/* FORMATO */
+// =============================
+// COLORES PERSONAS
+// =============================
 
-function money(n){
-return "$ " + Number(n || 0).toLocaleString("es-CO");
+const colores = [
+  "#e74c3c",
+  "#3498db",
+  "#27ae60",
+  "#9b59b6",
+  "#f39c12",
+  "#16a085"
+]
+
+// =============================
+// ADMIN LOGIN
+// =============================
+
+function loginAdmin() {
+  const clave = document.getElementById("adminPass").value
+
+  if (clave === ADMIN_PASSWORD) {
+    esAdmin = true
+    document.getElementById("modoAdmin").innerText = "Modo 👑 Admin"
+    renderTodo()
+  } else {
+    alert("Clave incorrecta")
+  }
 }
 
-/* PERSONAS */
+// =============================
+// PROYECTOS
+// =============================
 
-window.agregarPersona = function(){
+function crearProyecto() {
+  const nombre = document.getElementById("nuevoProyecto").value.trim()
+  if (!nombre) return
 
-const nombre = document.getElementById("nombrePersona").value.trim();
-if(!nombre) return;
+  db.ref("proyectos/" + nombre).set({
+    personas: {},
+    ingresos: {},
+    gastos: {},
+    deudas: {}
+  })
 
-personas.push({nombre});
-guardarPersonas();
-
-document.getElementById("nombrePersona").value="";
-
+  proyectoActual = nombre
+  cargarProyectos()
 }
 
-function guardarPersonas(){
-set(ref(db, "data/personas"), personas);
+function eliminarProyecto() {
+  if (!proyectoActual) return
+
+  if (!confirm("Eliminar proyecto completo?")) return
+
+  db.ref("proyectos/" + proyectoActual).remove()
+  proyectoActual = null
+  cargarProyectos()
 }
 
-function renderPersonas(){
+function cargarProyectos() {
+  db.ref("proyectos").on("value", snap => {
+    const data = snap.val() || {}
+    const select = document.getElementById("selectProyecto")
 
-const cont = document.getElementById("listaPersonas");
-cont.innerHTML="";
+    select.innerHTML = ""
 
-personas.forEach((p,i)=>{
+    Object.keys(data).forEach(p => {
+      const op = document.createElement("option")
+      op.value = p
+      op.textContent = p
+      select.appendChild(op)
+    })
 
-const div = document.createElement("div");
-div.className="item";
+    if (!proyectoActual && Object.keys(data).length > 0) {
+      proyectoActual = Object.keys(data)[0]
+    }
 
-div.innerHTML=`
-<span class="${colorPersona(p.nombre)}"><b>${p.nombre}</b></span>
-<div class="delete-btn" onclick="eliminarPersona(${i})">X</div>
-`;
-
-cont.appendChild(div);
-
-});
-
+    select.value = proyectoActual || ""
+    cargarDatosProyecto()
+  })
 }
 
-/* SELECTS */
-
-function cargarSelects(){
-
-const sel1 = document.getElementById("personaIngreso");
-const sel2 = document.getElementById("personaGasto");
-
-sel1.innerHTML='<option value="">Seleccionar</option>';
-sel2.innerHTML='<option value="">Seleccionar</option>';
-
-personas.forEach(p=>{
-
-const o1=document.createElement("option");
-o1.value=p.nombre;
-o1.textContent=p.nombre;
-
-const o2=document.createElement("option");
-o2.value=p.nombre;
-o2.textContent=p.nombre;
-
-sel1.appendChild(o1);
-sel2.appendChild(o2);
-
-});
-
+function cambiarProyecto() {
+  proyectoActual = document.getElementById("selectProyecto").value
+  cargarDatosProyecto()
 }
 
-/* ELIMINAR PERSONA */
+// =============================
+// CARGAR DATOS FIREBASE
+// =============================
 
-window.eliminarPersona=function(i){
-personas.splice(i,1);
-guardarPersonas();
+function cargarDatosProyecto() {
+  if (!proyectoActual) return
+
+  db.ref("proyectos/" + proyectoActual).on("value", snap => {
+    const data = snap.val() || {}
+
+    personas = data.personas || {}
+    ingresos = data.ingresos || {}
+    gastos = data.gastos || {}
+    deudas = data.deudas || {}
+
+    renderTodo()
+
+    // 🔥 CORRECCIÓN IMPORTANTE
+    cargarSelectPersonas()
+  })
 }
 
-/* INGRESOS */
+// =============================
+// PERSONAS
+// =============================
 
-window.agregarIngreso=function(){
+function agregarPersona() {
+  const nombre = document.getElementById("nombrePersona").value.trim()
+  if (!nombre) return
 
-const persona=document.getElementById("personaIngreso").value;
-const monto=Number(document.getElementById("montoIngreso").value);
+  const color = colores[Object.keys(personas).length % colores.length]
 
-if(!persona||!monto) return;
+  db.ref(`proyectos/${proyectoActual}/personas/${nombre}`).set({
+    color
+  })
 
-push(ref(db,"data/ingresos"),{
-persona,
-monto,
-fecha:Date.now()
-});
-
-document.getElementById("montoIngreso").value="";
-
+  document.getElementById("nombrePersona").value = ""
 }
 
-function renderIngresos(){
+function eliminarPersona(nombre) {
+  if (!esAdmin) return
 
-let total=0;
-const cont=document.getElementById("listaIngresos");
-cont.innerHTML="";
+  if (!confirm("Eliminar integrante?")) return
 
-ingresos.forEach(i=>{
-
-total+=i.monto;
-
-const div=document.createElement("div");
-div.className="item";
-
-div.innerHTML=`
-<span class="${colorPersona(i.persona)}">
-${i.persona} → ${money(i.monto)}
-</span>
-`;
-
-cont.appendChild(div);
-
-});
-
-document.getElementById("totalIngresos").innerText="Total: "+money(total);
-
+  db.ref(`proyectos/${proyectoActual}/personas/${nombre}`).remove()
 }
 
-/* GASTOS */
+// =============================
+// SELECT PERSONAS
+// =============================
 
-window.agregarGasto=function(){
+function cargarSelectPersonas() {
+  const select = document.getElementById("selectPersona")
 
-const persona=document.getElementById("personaGasto").value;
-const desc=document.getElementById("descripcionGasto").value;
-const monto=Number(document.getElementById("montoGasto").value);
+  if (!select) return
 
-if(!persona||!monto) return;
+  select.innerHTML = ""
 
-push(ref(db,"data/gastos"),{
-persona,
-desc,
-monto,
-fecha:Date.now()
-});
-
-document.getElementById("descripcionGasto").value="";
-document.getElementById("montoGasto").value="";
-
+  Object.keys(personas).forEach(p => {
+    const op = document.createElement("option")
+    op.value = p
+    op.textContent = p
+    select.appendChild(op)
+  })
 }
 
-function renderGastos(){
+// =============================
+// INGRESOS
+// =============================
 
-let total=0;
-const cont=document.getElementById("listaGastos");
-cont.innerHTML="";
+function agregarIngreso() {
+  const persona = document.getElementById("selectPersona").value
+  const monto = Number(document.getElementById("montoIngreso").value)
 
-gastos.forEach(g=>{
+  if (!persona || !monto) return
 
-total+=g.monto;
+  const id = Date.now()
 
-const div=document.createElement("div");
-div.className="item";
+  db.ref(`proyectos/${proyectoActual}/ingresos/${id}`).set({
+    persona,
+    monto,
+    fecha: new Date().toLocaleDateString()
+  })
 
-div.innerHTML=`
-<span class="${colorPersona(g.persona)}">
-${g.persona} → ${g.desc} → ${money(g.monto)}
-</span>
-`;
-
-cont.appendChild(div);
-
-});
-
-document.getElementById("totalGastos").innerText="Total: "+money(total);
-
+  document.getElementById("montoIngreso").value = ""
 }
 
-/* BALANCE */
-
-function renderBalance(){
-
-const cont=document.getElementById("balance");
-cont.innerHTML="";
-
-const totalIng=ingresos.reduce((a,b)=>a+b.monto,0);
-const totalGas=gastos.reduce((a,b)=>a+b.monto,0);
-
-const porPersona={};
-
-personas.forEach(p=>porPersona[p.nombre]=0);
-
-ingresos.forEach(i=>porPersona[i.persona]+=i.monto);
-gastos.forEach(g=>porPersona[g.persona]-=g.monto);
-
-const promedio=totalGas/personas.length||0;
-
-Object.keys(porPersona).forEach(p=>{
-
-const balance=porPersona[p]-promedio;
-
-const div=document.createElement("div");
-div.innerHTML=`${p}: ${money(balance)}`;
-
-cont.appendChild(div);
-
-});
-
+function eliminarIngreso(id) {
+  if (!esAdmin) return
+  db.ref(`proyectos/${proyectoActual}/ingresos/${id}`).remove()
 }
 
-/* RANKING */
+// =============================
+// GASTOS
+// =============================
 
-function renderRanking(){
+function agregarGasto() {
+  const concepto = document.getElementById("conceptoGasto").value
+  const monto = Number(document.getElementById("montoGasto").value)
 
-const cont=document.getElementById("ranking");
-cont.innerHTML="";
+  if (!concepto || !monto) return
 
-const mapa={};
+  const id = Date.now()
 
-ingresos.forEach(i=>{
-mapa[i.persona]=(mapa[i.persona]||0)+i.monto;
-});
+  db.ref(`proyectos/${proyectoActual}/gastos/${id}`).set({
+    concepto,
+    monto,
+    fecha: new Date().toLocaleDateString()
+  })
 
-const arr=Object.entries(mapa).sort((a,b)=>b[1]-a[1]);
-
-arr.forEach((r,i)=>{
-const div=document.createElement("div");
-div.innerHTML=`${i+1}. ${r[0]} → ${money(r[1])}`;
-cont.appendChild(div);
-});
-
+  document.getElementById("montoGasto").value = ""
 }
 
-/* WHATSAPP */
-
-window.enviarWhatsApp=function(){
-
-let txt="🍻 *Resumen Gastos del Parche*\n\n";
-
-ingresos.forEach(i=>{
-txt+=`${i.persona} puso ${money(i.monto)}\n`;
-});
-
-txt+="\n💩 Gastos\n";
-
-gastos.forEach(g=>{
-txt+=`${g.persona} → ${g.desc} → ${money(g.monto)}\n`;
-});
-
-const url="https://wa.me/?text="+encodeURIComponent(txt);
-window.open(url);
-
+function eliminarGasto(id) {
+  if (!esAdmin) return
+  db.ref(`proyectos/${proyectoActual}/gastos/${id}`).remove()
 }
 
-/* FIREBASE LISTENERS */
+// =============================
+// DEUDAS
+// =============================
 
-onValue(ref(db,"data/personas"),snap=>{
+function calcularDeudas() {
+  const totalIngresos = Object.values(ingresos).reduce((a, b) => a + Number(b.monto || 0), 0)
+  const totalGastos = Object.values(gastos).reduce((a, b) => a + Number(b.monto || 0), 0)
 
-personas=snap.val()||[];
+  const personasLista = Object.keys(personas)
+  const deudaPorPersona = totalGastos / (personasLista.length || 1)
 
-renderPersonas();
-cargarSelects(); // 🔥 ESTA LINEA ARREGLA EL BUG
+  let resultado = {}
 
-});
+  personasLista.forEach(p => {
+    const aportado = Object.values(ingresos)
+      .filter(i => i.persona === p)
+      .reduce((a, b) => a + Number(b.monto || 0), 0)
 
-onValue(ref(db,"data/ingresos"),snap=>{
+    resultado[p] = deudaPorPersona - aportado
+  })
 
-const val=snap.val()||{};
-ingresos=Object.values(val);
+  deudas = resultado
+}
 
-renderIngresos();
-renderBalance();
-renderRanking();
+// =============================
+// RENDER
+// =============================
 
-});
+function renderTodo() {
+  renderPersonas()
+  renderIngresos()
+  renderGastos()
+  renderRanking()
+  renderDeudas()
+}
 
-onValue(ref(db,"data/gastos"),snap=>{
+// =============================
+// PERSONAS UI
+// =============================
 
-const val=snap.val()||{};
-gastos=Object.values(val);
+function renderPersonas() {
+  const cont = document.getElementById("listaPersonas")
+  if (!cont) return
 
-renderGastos();
-renderBalance();
+  cont.innerHTML = ""
 
-});
+  Object.keys(personas).forEach(p => {
+    const div = document.createElement("div")
+    div.className = "personaItem"
+
+    const color = personas[p].color || "#000"
+
+    div.innerHTML = `
+      <span style="color:${color};font-weight:bold">${p}</span>
+      ${esAdmin ? `<button onclick="eliminarPersona('${p}')">X</button>` : ""}
+    `
+
+    cont.appendChild(div)
+  })
+}
+
+// =============================
+// INGRESOS UI
+// =============================
+
+function renderIngresos() {
+  const cont = document.getElementById("listaIngresos")
+  if (!cont) return
+
+  cont.innerHTML = ""
+
+  let total = 0
+
+  Object.entries(ingresos).forEach(([id, i]) => {
+    total += Number(i.monto)
+
+    const color = personas[i.persona]?.color || "#000"
+
+    const div = document.createElement("div")
+    div.className = "itemFila"
+
+    div.innerHTML = `
+      <span style="color:${color}">${i.persona}</span>
+      <span>${moneda(i.monto)}</span>
+      ${esAdmin ? `<button onclick="eliminarIngreso('${id}')">X</button>` : ""}
+    `
+
+    cont.appendChild(div)
+  })
+
+  document.getElementById("totalIngresos").innerText = moneda(total)
+}
+
+// =============================
+// GASTOS UI
+// =============================
+
+function renderGastos() {
+  const cont = document.getElementById("listaGastos")
+  if (!cont) return
+
+  cont.innerHTML = ""
+
+  let total = 0
+
+  Object.entries(gastos).forEach(([id, g]) => {
+    total += Number(g.monto)
+
+    const div = document.createElement("div")
+    div.className = "itemFila"
+
+    div.innerHTML = `
+      <span>${g.concepto}</span>
+      <span>${moneda(g.monto)}</span>
+      ${esAdmin ? `<button onclick="eliminarGasto('${id}')">X</button>` : ""}
+    `
+
+    cont.appendChild(div)
+  })
+
+  document.getElementById("totalGastos").innerText = moneda(total)
+
+  calcularDeudas()
+}
+
+// =============================
+// RANKING
+// =============================
+
+function renderRanking() {
+  const cont = document.getElementById("ranking")
+  if (!cont) return
+
+  cont.innerHTML = ""
+
+  let ranking = {}
+
+  Object.values(ingresos).forEach(i => {
+    ranking[i.persona] = (ranking[i.persona] || 0) + Number(i.monto)
+  })
+
+  const orden = Object.entries(ranking).sort((a, b) => b[1] - a[1])
+
+  orden.forEach(([persona, total]) => {
+    const color = personas[persona]?.color || "#000"
+
+    const div = document.createElement("div")
+    div.innerHTML = `
+      <span style="color:${color};font-weight:bold">${persona}</span>
+      <span>${moneda(total)}</span>
+    `
+    cont.appendChild(div)
+  })
+}
+
+// =============================
+// DEUDAS UI
+// =============================
+
+function renderDeudas() {
+  const cont = document.getElementById("listaDeudas")
+  if (!cont) return
+
+  cont.innerHTML = ""
+
+  Object.entries(deudas).forEach(([p, valor]) => {
+    const color = personas[p]?.color || "#000"
+
+    const div = document.createElement("div")
+
+    div.innerHTML = `
+      <span style="color:${color}">${p}</span>
+      <span>${moneda(valor)}</span>
+    `
+
+    cont.appendChild(div)
+  })
+}
+
+// =============================
+// WHATSAPP
+// =============================
+
+function enviarWhatsApp() {
+  let mensaje = `🍻 *Gastos del Parche*\n\n`
+
+  mensaje += `💰 Ingresos:\n`
+  Object.values(ingresos).forEach(i => {
+    mensaje += `• ${i.persona}: ${moneda(i.monto)}\n`
+  })
+
+  mensaje += `\n💸 Gastos:\n`
+  Object.values(gastos).forEach(g => {
+    mensaje += `• ${g.concepto}: ${moneda(g.monto)}\n`
+  })
+
+  mensaje += `\n⚖️ Balance:\n`
+  Object.entries(deudas).forEach(([p, v]) => {
+    mensaje += `• ${p}: ${moneda(v)}\n`
+  })
+
+  const url = `https://wa.me/?text=${encodeURIComponent(mensaje)}`
+  window.open(url, "_blank")
+}
+
+// =============================
+// INIT
+// =============================
+
+window.onload = () => {
+  cargarProyectos()
+}
