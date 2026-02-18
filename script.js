@@ -79,12 +79,9 @@ window.login = function () {
   const pass = document.getElementById("adminPass").value;
 
   if (pass === ADMIN_PASSWORD) {
-
     role = "admin";
     document.getElementById("roleLabel").textContent = "Modo: 👑 Admin";
-
-    alert("Modo administrador activado");
-
+    document.querySelectorAll(".admin").forEach(e => e.classList.remove("hidden"));
   } else {
     alert("Clave incorrecta");
   }
@@ -104,7 +101,7 @@ window.createProject = async function () {
   const name = document.getElementById("newProject").value.trim();
 
   if (!name) {
-    alert("Escribe un nombre de proyecto");
+    alert("Escribe un nombre");
     return;
   }
 
@@ -120,8 +117,6 @@ window.createProject = async function () {
   document.getElementById("projectSelect").value = name;
 
   connectProject();
-
-  alert("Proyecto creado ✅");
 };
 
 document.getElementById("projectSelect").addEventListener("change", (e) => {
