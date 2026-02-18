@@ -7,11 +7,13 @@ addDoc,
 deleteDoc,
 doc,
 onSnapshot,
-setDoc
+setDoc,
+query,
+where
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 
-// 🔥 FIREBASE CONFIG
+// 🔥 FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyBfMEoJ0yuS9EE1UC8cWHpqjgSL0bphcqs",
   authDomain: "gastos-parche.firebaseapp.com",
@@ -28,14 +30,14 @@ let admin=false;
 let proyectoActual=null;
 
 
-// 🔴 CONTROL LISTENERS ACTIVOS
+// listeners
 let unsubPersonas=null;
 let unsubIngresos=null;
 let unsubGastos=null;
 let unsubDeudas=null;
 
 
-// 🎨 COLORES PERSONAS
+// colores
 const colores=["#e74c3c","#3498db","#2ecc71","#9b59b6","#f39c12","#1abc9c"];
 const colorMap={};
 
@@ -179,7 +181,7 @@ monto:Number(monto)
 };
 
 
-// ================= WHATSAPP NARCO EMPRESARIAL
+// ================= WHATSAPP
 window.compartirWhatsApp=()=>{
 
 const ingresos=document.getElementById("totalIngresos").innerText;
@@ -228,7 +230,10 @@ window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`);
 // ================= CARGAR DATOS
 function cargarDatos(){
 
-// 🔴 CANCELAR LISTENERS ANTERIORES
+if(!proyectoActual) return;
+
+
+// cancelar listeners
 if(unsubPersonas) unsubPersonas();
 if(unsubIngresos) unsubIngresos();
 if(unsubGastos) unsubGastos();
@@ -236,7 +241,12 @@ if(unsubDeudas) unsubDeudas();
 
 
 // ================= PERSONAS
-unsubPersonas = onSnapshot(collection(db,"personas"),snap=>{
+const qPersonas=query(
+collection(db,"personas"),
+where("proyecto","==",proyectoActual)
+);
+
+unsubPersonas=onSnapshot(qPersonas,snap=>{
 
 const lista=document.getElementById("listaPersonas");
 
@@ -256,7 +266,6 @@ let i=0;
 snap.forEach(docu=>{
 
 const d=docu.data();
-if(d.proyecto!==proyectoActual) return;
 
 if(!colorMap[d.nombre]){
 colorMap[d.nombre]=colores[i%colores.length];
@@ -299,7 +308,12 @@ sel.appendChild(op);
 
 
 // ================= INGRESOS
-unsubIngresos = onSnapshot(collection(db,"ingresos"),snap=>{
+const qIngresos=query(
+collection(db,"ingresos"),
+where("proyecto","==",proyectoActual)
+);
+
+unsubIngresos=onSnapshot(qIngresos,snap=>{
 
 let total=0;
 const lista=document.getElementById("listaIngresos");
@@ -310,7 +324,6 @@ const rankingTemp={};
 snap.forEach(docu=>{
 
 const d=docu.data();
-if(d.proyecto!==proyectoActual) return;
 
 total+=Number(d.monto);
 rankingTemp[d.persona]=(rankingTemp[d.persona]||0)+Number(d.monto);
@@ -339,7 +352,12 @@ actualizarRanking(rankingTemp);
 
 
 // ================= GASTOS
-unsubGastos = onSnapshot(collection(db,"gastos"),snap=>{
+const qGastos=query(
+collection(db,"gastos"),
+where("proyecto","==",proyectoActual)
+);
+
+unsubGastos=onSnapshot(qGastos,snap=>{
 
 let total=0;
 const lista=document.getElementById("listaGastos");
@@ -348,7 +366,6 @@ lista.innerHTML="";
 snap.forEach(docu=>{
 
 const d=docu.data();
-if(d.proyecto!==proyectoActual) return;
 
 total+=Number(d.monto);
 
@@ -375,7 +392,12 @@ actualizarBalance();
 
 
 // ================= DEUDAS
-unsubDeudas = onSnapshot(collection(db,"deudas"),snap=>{
+const qDeudas=query(
+collection(db,"deudas"),
+where("proyecto","==",proyectoActual)
+);
+
+unsubDeudas=onSnapshot(qDeudas,snap=>{
 
 const lista=document.getElementById("listaDeudas");
 lista.innerHTML="";
@@ -383,7 +405,6 @@ lista.innerHTML="";
 snap.forEach(docu=>{
 
 const d=docu.data();
-if(d.proyecto!==proyectoActual) return;
 
 const li=document.createElement("li");
 li.innerHTML=`${d.deudor} debe ${formato(d.monto)} a ${d.acreedor}`;
