@@ -1,465 +1,375 @@
-let admin=false
-let proyectoActual=null
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-const ADMIN_PASS="1234"
+import {
+getFirestore,
+collection,
+addDoc,
+deleteDoc,
+doc,
+onSnapshot,
+setDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const colores=["#e74c3c","#3498db","#27ae60","#9b59b6","#f39c12"]
+
+// 🔥 CONFIG FIREBASE
+const firebaseConfig = {
+  apiKey: "AIzaSyBfMEoJ0yuS9EE1UC8cWHpqjgSL0bphcqs",
+  authDomain: "gastos-parche.firebaseapp.com",
+  projectId: "gastos-parche",
+  storageBucket: "gastos-parche.firebasestorage.app",
+  messagingSenderId: "558910304272",
+  appId: "1:558910304272:web:e9ae826d11a7865a8b9a95"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+
+let admin=false;
+let proyectoActual=null;
+
 
 function formato(n){
-return "$ "+Number(n||0).toLocaleString("es-CO")
+return "$ " + Number(n || 0).toLocaleString("es-CO");
 }
 
-function loginAdmin(){
-let pass=document.getElementById("adminPass").value
-if(pass===ADMIN_PASS){
-admin=true
-document.getElementById("modoAdmin").innerText="Modo 👑 Admin"
+
+// ADMIN
+window.loginAdmin=()=>{
+
+const pass=document.getElementById("claveAdmin").value;
+
+if(pass==="1234"){
+admin=true;
+document.getElementById("modoTexto").innerText="Modo 👑 Admin";
 }else{
-alert("Clave incorrecta")
-}
-}
-
-
-// ---------- PROYECTOS ----------
-
-function crearProyecto(){
-let nombre=document.getElementById("nuevoProyecto").value
-if(!nombre) return
-
-db.collection("proyectos").doc(nombre).set({
-integrantes:[],
-ingresos:[],
-gastos:[],
-deudas:[]
-})
-
-proyectoActual=nombre
-cargarProyectos()
+alert("Clave incorrecta");
 }
 
-function eliminarProyecto(){
-if(!proyectoActual) return
-db.collection("proyectos").doc(proyectoActual).delete()
-proyectoActual=null
-cargarProyectos()
+};
+
+
+// PROYECTOS
+const proyectoSelect=document.getElementById("proyectoSelect");
+
+onSnapshot(collection(db,"proyectos"),snap=>{
+
+proyectoSelect.innerHTML="";
+
+snap.forEach(docu=>{
+
+const op=document.createElement("option");
+op.value=docu.id;
+op.textContent=docu.id;
+
+proyectoSelect.appendChild(op);
+
+});
+
+if(!proyectoActual && proyectoSelect.options.length>0){
+proyectoActual=proyectoSelect.options[0].value;
+cargarDatos();
 }
 
-function cargarProyectos(){
-
-db.collection("proyectos").onSnapshot(snap=>{
-
-let select=document.getElementById("selectProyecto")
-select.innerHTML=""
-
-snap.forEach(doc=>{
-let op=document.createElement("option")
-op.value=doc.id
-op.textContent=doc.id
-select.appendChild(op)
-})
-
-if(!proyectoActual && snap.docs.length>0){
-proyectoActual=snap.docs[0].id
-}
-
-select.value=proyectoActual
-
-cargarDatos()
-
-})
-
-}
-
-document.getElementById("selectProyecto").onchange=e=>{
-proyectoActual=e.target.value
-cargarDatos()
-}
+});
 
 
-// ---------- DATOS ----------
+window.crearProyecto=async()=>{
+
+if(!admin) return alert("Solo admin");
+
+const nombre=document.getElementById("nuevoProyecto").value;
+if(!nombre) return;
+
+await setDoc(doc(db,"proyectos",nombre),{nombre});
+
+};
+
+
+window.eliminarProyecto=async()=>{
+
+if(!admin) return;
+
+await deleteDoc(doc(db,"proyectos",proyectoActual));
+
+};
+
+
+proyectoSelect.onchange=()=>{
+proyectoActual=proyectoSelect.value;
+cargarDatos();
+};
+
+
+// PERSONAS
+window.agregarPersona=async()=>{
+
+if(!admin) return;
+
+const nombre=document.getElementById("nombrePersona").value;
+if(!nombre) return;
+
+await addDoc(collection(db,"personas"),{
+proyecto:proyectoActual,
+nombre
+});
+
+};
+
+
+// INGRESOS
+window.agregarIngreso=async()=>{
+
+if(!admin) return;
+
+const persona=document.getElementById("personaIngreso").value;
+const monto=document.getElementById("montoIngreso").value;
+
+await addDoc(collection(db,"ingresos"),{
+proyecto:proyectoActual,
+persona,
+monto:Number(monto)
+});
+
+};
+
+
+// GASTOS
+window.agregarGasto=async()=>{
+
+if(!admin) return;
+
+const persona=document.getElementById("personaGasto").value;
+const monto=document.getElementById("montoGasto").value;
+
+await addDoc(collection(db,"gastos"),{
+proyecto:proyectoActual,
+persona,
+monto:Number(monto)
+});
+
+};
+
+
+// DEUDAS
+window.agregarDeuda=async()=>{
+
+if(!admin) return;
+
+const deudor=document.getElementById("deudor").value;
+const acreedor=document.getElementById("acreedor").value;
+const monto=document.getElementById("montoDeuda").value;
+
+await addDoc(collection(db,"deudas"),{
+proyecto:proyectoActual,
+deudor,
+acreedor,
+monto:Number(monto)
+});
+
+};
+
+
+// WHATSAPP
+window.compartirWhatsApp=()=>{
+
+const texto=`Balance actual del parche: ${document.getElementById("balance").innerText}`;
+
+window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`);
+
+};
+
+
+// ================= CARGAR DATOS
 
 function cargarDatos(){
 
-if(!proyectoActual) return
+// PERSONAS
+onSnapshot(collection(db,"personas"),snap=>{
 
-db.collection("proyectos").doc(proyectoActual)
-.onSnapshot(doc=>{
+const lista=document.getElementById("listaPersonas");
 
-let data=doc.data()||{}
+const s1=document.getElementById("personaIngreso");
+const s2=document.getElementById("personaGasto");
+const s3=document.getElementById("deudor");
+const s4=document.getElementById("acreedor");
 
-renderTodo(data)
+lista.innerHTML="";
+s1.innerHTML="";
+s2.innerHTML="";
+s3.innerHTML="";
+s4.innerHTML="";
 
-})
+snap.forEach(docu=>{
+
+const d=docu.data();
+if(d.proyecto!==proyectoActual) return;
+
+const li=document.createElement("li");
+li.textContent=d.nombre;
+lista.appendChild(li);
+
+[s1,s2,s3,s4].forEach(sel=>{
+const op=document.createElement("option");
+op.value=d.nombre;
+op.textContent=d.nombre;
+sel.appendChild(op);
+});
+
+});
+
+});
+
+
+// INGRESOS
+onSnapshot(collection(db,"ingresos"),snap=>{
+
+let total=0;
+const lista=document.getElementById("listaIngresos");
+lista.innerHTML="";
+
+const rankingTemp={};
+
+snap.forEach(docu=>{
+
+const d=docu.data();
+if(d.proyecto!==proyectoActual) return;
+
+total+=Number(d.monto);
+rankingTemp[d.persona]=(rankingTemp[d.persona]||0)+Number(d.monto);
+
+const li=document.createElement("li");
+li.innerHTML=`${d.persona} → ${formato(d.monto)}`;
+
+if(admin){
+const btn=document.createElement("button");
+btn.textContent="X";
+btn.className="delete-btn";
+
+btn.onclick=async()=>{
+await deleteDoc(doc(db,"ingresos",docu.id));
+};
+
+li.appendChild(btn);
+}
+
+lista.appendChild(li);
+
+});
+
+document.getElementById("totalIngresos").innerText=formato(total);
+
+actualizarBalance();
+actualizarRanking(rankingTemp);
+
+});
+
+
+// GASTOS
+onSnapshot(collection(db,"gastos"),snap=>{
+
+let total=0;
+const lista=document.getElementById("listaGastos");
+lista.innerHTML="";
+
+snap.forEach(docu=>{
+
+const d=docu.data();
+if(d.proyecto!==proyectoActual) return;
+
+total+=Number(d.monto);
+
+const li=document.createElement("li");
+li.innerHTML=`${d.persona} → ${formato(d.monto)}`;
+
+if(admin){
+const btn=document.createElement("button");
+btn.textContent="X";
+btn.className="delete-btn";
+
+btn.onclick=async()=>{
+await deleteDoc(doc(db,"gastos",docu.id));
+};
+
+li.appendChild(btn);
+}
+
+lista.appendChild(li);
+
+});
+
+document.getElementById("totalGastos").innerText=formato(total);
+
+actualizarBalance();
+
+});
+
+
+// DEUDAS
+onSnapshot(collection(db,"deudas"),snap=>{
+
+const lista=document.getElementById("listaDeudas");
+lista.innerHTML="";
+
+snap.forEach(docu=>{
+
+const d=docu.data();
+if(d.proyecto!==proyectoActual) return;
+
+const li=document.createElement("li");
+li.innerHTML=`${d.deudor} debe ${formato(d.monto)} a ${d.acreedor}`;
+
+if(admin){
+const btn=document.createElement("button");
+btn.textContent="X";
+btn.className="delete-btn";
+
+btn.onclick=async()=>{
+await deleteDoc(doc(db,"deudas",docu.id));
+};
+
+li.appendChild(btn);
+}
+
+lista.appendChild(li);
+
+});
+
+});
 
 }
 
 
-// ---------- RENDER ----------
+// BALANCE
+function actualizarBalance(){
 
-function renderTodo(data){
+const ingresos=Number(document.getElementById("totalIngresos").innerText.replace(/\D/g,""));
+const gastos=Number(document.getElementById("totalGastos").innerText.replace(/\D/g,""));
 
-renderIntegrantes(data.integrantes||[])
-renderSelects(data.integrantes||[])
-renderIngresos(data.ingresos||[])
-renderGastos(data.gastos||[])
-renderDeudas(data.deudas||[])
-renderRanking(data.ingresos||[],data.integrantes||[])
+const total=ingresos-gastos;
 
-}
-
-
-// ---------- INTEGRANTES ----------
-
-async function agregarIntegrante(){
-
-if(!admin) return alert("Solo admin")
-
-let nombre=document.getElementById("nombreIntegrante").value
-if(!nombre) return
-
-let doc=await db.collection("proyectos").doc(proyectoActual).get()
-let data=doc.data()
-
-let lista=data.integrantes||[]
-
-lista.push({
-nombre,
-color:colores[lista.length%colores.length]
-})
-
-db.collection("proyectos").doc(proyectoActual).update({
-integrantes:lista
-})
-
-document.getElementById("nombreIntegrante").value=""
-}
-
-function renderIntegrantes(lista){
-
-let div=document.getElementById("listaIntegrantes")
-div.innerHTML=""
-
-lista.forEach((p,i)=>{
-
-let row=document.createElement("div")
-row.className="item"
-
-row.innerHTML=`
-<span style="color:${p.color};font-weight:bold">${p.nombre}</span>
-${admin?`<div class="delete" onclick="eliminarIntegrante(${i})">x</div>`:""}
-`
-
-div.appendChild(row)
-
-})
-
-}
-
-async function eliminarIntegrante(i){
-
-if(!admin) return
-
-let doc=await db.collection("proyectos").doc(proyectoActual).get()
-let data=doc.data()
-
-let lista=data.integrantes||[]
-
-lista.splice(i,1)
-
-db.collection("proyectos").doc(proyectoActual).update({
-integrantes:lista
-})
+document.getElementById("balance").innerText=formato(total);
 
 }
 
 
-// ---------- SELECTS ----------
+// RANKING
+function actualizarRanking(data){
 
-function renderSelects(lista){
+const lista=document.getElementById("ranking");
+lista.innerHTML="";
 
-let ids=["selectIngreso","selectGasto","deudor","acreedor"]
+Object.entries(data)
+.sort((a,b)=>b[1]-a[1])
+.forEach(([persona,total],i)=>{
 
-ids.forEach(id=>{
+const medalla=i===0?"🥇":i===1?"🥈":i===2?"🥉":"";
 
-let s=document.getElementById(id)
-s.innerHTML=""
+const li=document.createElement("li");
+li.textContent=`${medalla} ${persona} → ${formato(total)}`;
 
-lista.forEach(p=>{
-let op=document.createElement("option")
-op.value=p.nombre
-op.textContent=p.nombre
-s.appendChild(op)
-})
+lista.appendChild(li);
 
-})
-
-}
-
-
-// ---------- INGRESOS ----------
-
-async function agregarIngreso(){
-
-if(!admin) return
-
-let persona=document.getElementById("selectIngreso").value
-let monto=Number(document.getElementById("montoIngreso").value)
-
-if(!persona||!monto) return
-
-let doc=await db.collection("proyectos").doc(proyectoActual).get()
-let data=doc.data()
-
-let lista=data.ingresos||[]
-
-lista.push({persona,monto})
-
-db.collection("proyectos").doc(proyectoActual).update({
-ingresos:lista
-})
-
-document.getElementById("montoIngreso").value=""
-}
-
-function renderIngresos(lista){
-
-let div=document.getElementById("listaIngresos")
-div.innerHTML=""
-
-let total=0
-
-lista.forEach((i,index)=>{
-
-total+=i.monto
-
-let row=document.createElement("div")
-row.className="item"
-
-row.innerHTML=`
-<span>${i.persona}</span>
-<span>${formato(i.monto)}</span>
-${admin?`<div class="delete" onclick="eliminarIngreso(${index})">x</div>`:""}
-`
-
-div.appendChild(row)
-
-})
-
-document.getElementById("totalIngresos").innerText="Total: "+formato(total)
+});
 
 }
-
-async function eliminarIngreso(i){
-
-let doc=await db.collection("proyectos").doc(proyectoActual).get()
-let data=doc.data()
-
-let lista=data.ingresos||[]
-
-lista.splice(i,1)
-
-db.collection("proyectos").doc(proyectoActual).update({
-ingresos:lista
-})
-
-}
-
-
-// ---------- GASTOS ----------
-
-async function agregarGasto(){
-
-if(!admin) return
-
-let persona=document.getElementById("selectGasto").value
-let desc=document.getElementById("descGasto").value
-let monto=Number(document.getElementById("montoGasto").value)
-
-if(!persona||!monto) return
-
-let doc=await db.collection("proyectos").doc(proyectoActual).get()
-let data=doc.data()
-
-let lista=data.gastos||[]
-
-lista.push({persona,desc,monto})
-
-db.collection("proyectos").doc(proyectoActual).update({
-gastos:lista
-})
-
-document.getElementById("descGasto").value=""
-document.getElementById("montoGasto").value=""
-}
-
-function renderGastos(lista){
-
-let div=document.getElementById("listaGastos")
-div.innerHTML=""
-
-let total=0
-
-lista.forEach((g,i)=>{
-
-total+=g.monto
-
-let row=document.createElement("div")
-row.className="item"
-
-row.innerHTML=`
-<span>${g.desc}</span>
-<span>${formato(g.monto)}</span>
-${admin?`<div class="delete" onclick="eliminarGasto(${i})">x</div>`:""}
-`
-
-div.appendChild(row)
-
-})
-
-document.getElementById("totalGastos").innerText="Total: "+formato(total)
-
-}
-
-async function eliminarGasto(i){
-
-let doc=await db.collection("proyectos").doc(proyectoActual).get()
-let data=doc.data()
-
-let lista=data.gastos||[]
-
-lista.splice(i,1)
-
-db.collection("proyectos").doc(proyectoActual).update({
-gastos:lista
-})
-
-}
-
-
-// ---------- DEUDAS ----------
-
-async function agregarDeuda(){
-
-if(!admin) return
-
-let deudor=document.getElementById("deudor").value
-let acreedor=document.getElementById("acreedor").value
-let monto=Number(document.getElementById("montoDeuda").value)
-
-let doc=await db.collection("proyectos").doc(proyectoActual).get()
-let data=doc.data()
-
-let lista=data.deudas||[]
-
-lista.push({deudor,acreedor,monto})
-
-db.collection("proyectos").doc(proyectoActual).update({
-deudas:lista
-})
-
-}
-
-function renderDeudas(lista){
-
-let div=document.getElementById("listaDeudas")
-div.innerHTML=""
-
-lista.forEach((d,i)=>{
-
-let row=document.createElement("div")
-row.className="item"
-
-row.innerHTML=`
-<span>${d.deudor} → ${d.acreedor}</span>
-<span>${formato(d.monto)}</span>
-${admin?`<div class="delete" onclick="eliminarDeuda(${i})">x</div>`:""}
-`
-
-div.appendChild(row)
-
-})
-
-}
-
-async function eliminarDeuda(i){
-
-let doc=await db.collection("proyectos").doc(proyectoActual).get()
-let data=doc.data()
-
-let lista=data.deudas||[]
-
-lista.splice(i,1)
-
-db.collection("proyectos").doc(proyectoActual).update({
-deudas:lista
-})
-
-}
-
-
-// ---------- RANKING ----------
-
-function renderRanking(ingresos,integrantes){
-
-let mapa={}
-
-ingresos.forEach(i=>{
-mapa[i.persona]=(mapa[i.persona]||0)+i.monto
-})
-
-let lista=Object.entries(mapa).sort((a,b)=>b[1]-a[1])
-
-let div=document.getElementById("ranking")
-div.innerHTML=""
-
-lista.forEach((p,i)=>{
-
-let medal=i===0?"🥇":i===1?"🥈":i===2?"🥉":""
-
-let row=document.createElement("div")
-row.className="item"
-
-row.innerHTML=`
-<span>${medal} ${p[0]}</span>
-<span>${formato(p[1])}</span>
-`
-
-div.appendChild(row)
-
-})
-
-}
-
-
-// ---------- WHATSAPP ----------
-
-async function enviarWhatsApp(){
-
-let doc=await db.collection("proyectos").doc(proyectoActual).get()
-let data=doc.data()
-
-let ingresos=data.ingresos||[]
-let gastos=data.gastos||[]
-
-let totalIng=ingresos.reduce((a,b)=>a+b.monto,0)
-let totalGas=gastos.reduce((a,b)=>a+b.monto,0)
-
-let saldo=totalIng-totalGas
-
-let msg=
-`🍻 Gastos del Parche
-
-💰 Ingresos: ${formato(totalIng)}
-💩 Gastos: ${formato(totalGas)}
-📊 Saldo: ${formato(saldo)}
-
-Proyecto: ${proyectoActual}`
-
-window.open("https://wa.me/?text="+encodeURIComponent(msg))
-
-}
-
-
-// ---------- INIT ----------
-
-cargarProyectos()
