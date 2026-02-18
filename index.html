@@ -1,106 +1,110 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gastos del Parche</title>
+  <meta charset="UTF-8">
+  <title>Gastos del Parche 🍻</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet" href="style.css">
-<script type="module" src="script.js"></script>
+  <link rel="stylesheet" href="style.css">
 
+  <script type="module" src="app.js"></script>
+  <script defer src="script.js"></script>
 </head>
 
 <body>
 
-<h1>🍻 Gastos del Parche</h1>
+<div class="container">
 
-<div class="card">
-<h2>📂 Proyecto</h2>
+  <h1>🍻 Gastos del Parche</h1>
 
-<select id="proyectoSelect"></select>
+  <!-- Proyecto -->
+  <div class="card">
+    <h2>📁 Proyecto</h2>
 
-<input id="nuevoProyecto" placeholder="Nuevo proyecto">
+    <select id="proyectoSelect"></select>
 
-<button onclick="crearProyecto()">Crear</button>
-<button class="danger" onclick="eliminarProyecto()">Eliminar Proyecto</button>
-</div>
+    <input type="text" id="nuevoProyecto" placeholder="Nuevo proyecto">
 
+    <button onclick="crearProyecto()">Crear</button>
+    <button class="danger" onclick="eliminarProyecto()">Eliminar Proyecto</button>
+  </div>
 
-<div class="card">
-<h2>🔐 Acceso Admin</h2>
+  <!-- Admin -->
+  <div class="card">
+    <h2>🔐 Acceso Admin</h2>
 
-<input id="claveAdmin" type="password" placeholder="Clave admin">
-<button onclick="loginAdmin()">Entrar</button>
+    <input type="password" id="adminPass" placeholder="Clave admin">
+    <button onclick="loginAdmin()">Entrar</button>
 
-<p id="modoTexto">Modo 👀 Solo ver</p>
-</div>
+    <p id="modoAdmin">Modo 👀 Solo ver</p>
+  </div>
 
+  <!-- Integrantes -->
+  <div class="card">
+    <h2>👍 El Combo</h2>
 
-<div class="card">
-<h2>👍 Integrantes</h2>
+    <input type="text" id="nombreIntegrante" placeholder="Nombre">
+    <button onclick="agregarIntegrante()">Agregar</button>
 
-<input id="nombrePersona" placeholder="Nombre">
-<button onclick="agregarPersona()">Agregar</button>
+    <div id="listaIntegrantes"></div>
+  </div>
 
-<ul id="listaPersonas"></ul>
-</div>
+  <!-- Ingresos -->
+  <div class="card">
+    <h2>🍻 Quién puso</h2>
 
+    <select id="selectIngreso"></select>
+    <input type="number" id="montoIngreso" placeholder="Monto">
 
-<div class="card">
-<h2>🍻 Quién puso</h2>
+    <button onclick="agregarIngreso()">Agregar</button>
 
-<select id="personaIngreso"></select>
-<input id="montoIngreso" placeholder="Monto">
+    <h3 id="totalIngresos"></h3>
+    <div id="detalleIngresos"></div>
+  </div>
 
-<button onclick="agregarIngreso()">Agregar</button>
+  <!-- Egresos -->
+  <div class="card">
+    <h2>💩 En qué se fue</h2>
 
-<h3>Total: <span id="totalIngresos">$ 0</span></h3>
+    <select id="selectEgreso"></select>
+    <input type="number" id="montoEgreso" placeholder="Monto">
 
-<ul id="listaIngresos"></ul>
-</div>
+    <button onclick="agregarEgreso()">Agregar</button>
 
+    <h3 id="totalEgresos"></h3>
+    <div id="detalleEgresos"></div>
+  </div>
 
-<div class="card">
-<h2>💩 En qué se fue</h2>
+  <!-- Deudas -->
+  <div class="card">
+    <h2>💸 Quién debe a quién</h2>
 
-<select id="personaGasto"></select>
-<input id="montoGasto" placeholder="Monto">
+    <select id="deudor"></select>
+    <select id="acreedor"></select>
+    <input type="number" id="montoDeuda" placeholder="Monto">
 
-<button onclick="agregarGasto()">Agregar</button>
+    <button onclick="agregarDeuda()">Registrar</button>
 
-<h3>Total: <span id="totalGastos">$ 0</span></h3>
+    <div id="listaDeudas"></div>
+  </div>
 
-<ul id="listaGastos"></ul>
-</div>
+  <!-- Estado -->
+  <div class="card resumen">
+    <h2>🔥 Cómo vamos</h2>
 
+    <h1 id="balance"></h1>
 
-<div class="card">
-<h2>💰 Balance</h2>
+    <button class="whatsapp" onclick="compartirWhatsApp()">
+      📲 Compartir WhatsApp
+    </button>
+  </div>
 
-<h1 id="balance">$ 0</h1>
+  <!-- Ranking -->
+  <div class="card">
+    <h2>🏆 Ranking del Parche</h2>
+    <div id="ranking"></div>
+  </div>
 
-<button onclick="compartirWhatsApp()">📲 Compartir WhatsApp</button>
-</div>
-
-
-<div class="card">
-<h2>🏆 Ranking</h2>
-
-<ul id="ranking"></ul>
-</div>
-
-
-<div class="card">
-<h2>🤝 Quién debe a quién</h2>
-
-<select id="deudor"></select>
-<select id="acreedor"></select>
-
-<input id="montoDeuda" placeholder="Monto">
-
-<button onclick="agregarDeuda()">Guardar</button>
-
-<ul id="listaDeudas"></ul>
 </div>
 
 </body>
