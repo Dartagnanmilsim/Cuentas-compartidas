@@ -1,390 +1,465 @@
-let admin = false;
+let admin=false
+let proyectoActual=null
 
-const ADMIN_PASS = "1234";
+const ADMIN_PASS="1234"
 
-const colores = ["#e74c3c","#3498db","#27ae60","#9b59b6","#f39c12","#16a085"];
+const colores=["#e74c3c","#3498db","#27ae60","#9b59b6","#f39c12"]
 
+function formato(n){
+return "$ "+Number(n||0).toLocaleString("es-CO")
+}
 
 function loginAdmin(){
-    const pass = document.getElementById("adminPass").value;
-
-    if(pass === ADMIN_PASS){
-        admin = true;
-        document.getElementById("modoAdmin").innerText = "Modo 👑 Admin";
-        alert("Modo administrador activado");
-    }else{
-        alert("Clave incorrecta");
-    }
+let pass=document.getElementById("adminPass").value
+if(pass===ADMIN_PASS){
+admin=true
+document.getElementById("modoAdmin").innerText="Modo 👑 Admin"
+}else{
+alert("Clave incorrecta")
+}
 }
 
 
+// ---------- PROYECTOS ----------
 
-function formatoPesos(num){
-    return "$ " + Number(num || 0).toLocaleString("es-CO");
+function crearProyecto(){
+let nombre=document.getElementById("nuevoProyecto").value
+if(!nombre) return
+
+db.collection("proyectos").doc(nombre).set({
+integrantes:[],
+ingresos:[],
+gastos:[],
+deudas:[]
+})
+
+proyectoActual=nombre
+cargarProyectos()
+}
+
+function eliminarProyecto(){
+if(!proyectoActual) return
+db.collection("proyectos").doc(proyectoActual).delete()
+proyectoActual=null
+cargarProyectos()
+}
+
+function cargarProyectos(){
+
+db.collection("proyectos").onSnapshot(snap=>{
+
+let select=document.getElementById("selectProyecto")
+select.innerHTML=""
+
+snap.forEach(doc=>{
+let op=document.createElement("option")
+op.value=doc.id
+op.textContent=doc.id
+select.appendChild(op)
+})
+
+if(!proyectoActual && snap.docs.length>0){
+proyectoActual=snap.docs[0].id
+}
+
+select.value=proyectoActual
+
+cargarDatos()
+
+})
+
+}
+
+document.getElementById("selectProyecto").onchange=e=>{
+proyectoActual=e.target.value
+cargarDatos()
 }
 
 
+// ---------- DATOS ----------
 
 function cargarDatos(){
 
-    db.collection("parche").doc("data").onSnapshot(doc=>{
+if(!proyectoActual) return
 
-        const data = doc.data() || {};
+db.collection("proyectos").doc(proyectoActual)
+.onSnapshot(doc=>{
 
-        const integrantes = data.integrantes || [];
-        const ingresos = data.ingresos || [];
-        const gastos = data.gastos || [];
-        const deudas = data.deudas || [];
+let data=doc.data()||{}
 
-        renderIntegrantes(integrantes);
-        renderSelects(integrantes);
-        renderIngresos(ingresos);
-        renderGastos(gastos);
-        renderDeudas(deudas);
-        renderRanking(ingresos, integrantes);
+renderTodo(data)
 
-    });
+})
 
 }
 
 
+// ---------- RENDER ----------
 
-function guardar(data){
-    db.collection("parche").doc("data").set(data,{merge:true});
+function renderTodo(data){
+
+renderIntegrantes(data.integrantes||[])
+renderSelects(data.integrantes||[])
+renderIngresos(data.ingresos||[])
+renderGastos(data.gastos||[])
+renderDeudas(data.deudas||[])
+renderRanking(data.ingresos||[],data.integrantes||[])
+
 }
 
 
-
-async function obtener(){
-    const doc = await db.collection("parche").doc("data").get();
-    return doc.data() || {};
-}
-
-
+// ---------- INTEGRANTES ----------
 
 async function agregarIntegrante(){
 
-    if(!admin) return alert("Solo admin");
+if(!admin) return alert("Solo admin")
 
-    const nombre = document.getElementById("nombreIntegrante").value.trim();
-    if(!nombre) return;
+let nombre=document.getElementById("nombreIntegrante").value
+if(!nombre) return
 
-    const data = await obtener();
+let doc=await db.collection("proyectos").doc(proyectoActual).get()
+let data=doc.data()
 
-    const lista = data.integrantes || [];
+let lista=data.integrantes||[]
 
-    lista.push({
-        nombre,
-        color: colores[lista.length % colores.length]
-    });
+lista.push({
+nombre,
+color:colores[lista.length%colores.length]
+})
 
-    guardar({integrantes: lista});
+db.collection("proyectos").doc(proyectoActual).update({
+integrantes:lista
+})
 
-    document.getElementById("nombreIntegrante").value="";
+document.getElementById("nombreIntegrante").value=""
 }
-
-
 
 function renderIntegrantes(lista){
 
-    const div = document.getElementById("listaIntegrantes");
-    div.innerHTML="";
+let div=document.getElementById("listaIntegrantes")
+div.innerHTML=""
 
-    lista.forEach((p,i)=>{
+lista.forEach((p,i)=>{
 
-        const row = document.createElement("div");
-        row.className="item";
+let row=document.createElement("div")
+row.className="item"
 
-        row.innerHTML = `
-        <span style="color:${p.color};font-weight:bold">${p.nombre}</span>
-        ${admin ? `<div class="delete" onclick="eliminarIntegrante(${i})">X</div>`:""}
-        `;
+row.innerHTML=`
+<span style="color:${p.color};font-weight:bold">${p.nombre}</span>
+${admin?`<div class="delete" onclick="eliminarIntegrante(${i})">x</div>`:""}
+`
 
-        div.appendChild(row);
-    });
+div.appendChild(row)
+
+})
+
 }
-
-
 
 async function eliminarIntegrante(i){
 
-    if(!admin) return;
+if(!admin) return
 
-    const data = await obtener();
-    const lista = data.integrantes || [];
+let doc=await db.collection("proyectos").doc(proyectoActual).get()
+let data=doc.data()
 
-    lista.splice(i,1);
+let lista=data.integrantes||[]
 
-    guardar({integrantes:lista});
+lista.splice(i,1)
+
+db.collection("proyectos").doc(proyectoActual).update({
+integrantes:lista
+})
+
 }
 
 
+// ---------- SELECTS ----------
 
 function renderSelects(lista){
 
-    const selects = ["selectIngreso","selectGasto","deudor","acreedor"];
+let ids=["selectIngreso","selectGasto","deudor","acreedor"]
 
-    selects.forEach(id=>{
+ids.forEach(id=>{
 
-        const s = document.getElementById(id);
-        s.innerHTML="";
+let s=document.getElementById(id)
+s.innerHTML=""
 
-        lista.forEach(p=>{
-            const opt = document.createElement("option");
-            opt.value = p.nombre;
-            opt.textContent = p.nombre;
-            s.appendChild(opt);
-        });
+lista.forEach(p=>{
+let op=document.createElement("option")
+op.value=p.nombre
+op.textContent=p.nombre
+s.appendChild(op)
+})
 
-    });
+})
+
 }
 
 
+// ---------- INGRESOS ----------
 
 async function agregarIngreso(){
 
-    if(!admin) return alert("Solo admin");
+if(!admin) return
 
-    const nombre = document.getElementById("selectIngreso").value;
-    const monto = Number(document.getElementById("montoIngreso").value);
+let persona=document.getElementById("selectIngreso").value
+let monto=Number(document.getElementById("montoIngreso").value)
 
-    if(!nombre || !monto) return;
+if(!persona||!monto) return
 
-    const data = await obtener();
-    const lista = data.ingresos || [];
+let doc=await db.collection("proyectos").doc(proyectoActual).get()
+let data=doc.data()
 
-    lista.push({
-        nombre,
-        monto,
-        fecha: new Date().toLocaleDateString()
-    });
+let lista=data.ingresos||[]
 
-    guardar({ingresos:lista});
+lista.push({persona,monto})
 
-    document.getElementById("montoIngreso").value="";
+db.collection("proyectos").doc(proyectoActual).update({
+ingresos:lista
+})
+
+document.getElementById("montoIngreso").value=""
 }
-
-
 
 function renderIngresos(lista){
 
-    const div = document.getElementById("detalleIngresos");
-    div.innerHTML="";
+let div=document.getElementById("listaIngresos")
+div.innerHTML=""
 
-    let total = 0;
+let total=0
 
-    lista.forEach((item,i)=>{
+lista.forEach((i,index)=>{
 
-        total += item.monto;
+total+=i.monto
 
-        const row = document.createElement("div");
-        row.className="item";
+let row=document.createElement("div")
+row.className="item"
 
-        row.innerHTML = `
-        <span>${item.nombre} → ${formatoPesos(item.monto)}</span>
-        ${admin ? `<div class="delete" onclick="eliminarIngreso(${i})">X</div>`:""}
-        `;
+row.innerHTML=`
+<span>${i.persona}</span>
+<span>${formato(i.monto)}</span>
+${admin?`<div class="delete" onclick="eliminarIngreso(${index})">x</div>`:""}
+`
 
-        div.appendChild(row);
-    });
+div.appendChild(row)
 
-    document.getElementById("totalIngresos").innerText =
-        "Total: " + formatoPesos(total);
+})
+
+document.getElementById("totalIngresos").innerText="Total: "+formato(total)
+
 }
-
-
 
 async function eliminarIngreso(i){
 
-    const data = await obtener();
-    const lista = data.ingresos || [];
+let doc=await db.collection("proyectos").doc(proyectoActual).get()
+let data=doc.data()
 
-    lista.splice(i,1);
+let lista=data.ingresos||[]
 
-    guardar({ingresos:lista});
+lista.splice(i,1)
+
+db.collection("proyectos").doc(proyectoActual).update({
+ingresos:lista
+})
+
 }
 
 
+// ---------- GASTOS ----------
 
 async function agregarGasto(){
 
-    if(!admin) return alert("Solo admin");
+if(!admin) return
 
-    const persona = document.getElementById("selectGasto").value;
-    const desc = document.getElementById("descGasto").value;
-    const monto = Number(document.getElementById("montoGasto").value);
+let persona=document.getElementById("selectGasto").value
+let desc=document.getElementById("descGasto").value
+let monto=Number(document.getElementById("montoGasto").value)
 
-    if(!persona || !monto) return;
+if(!persona||!monto) return
 
-    const data = await obtener();
-    const lista = data.gastos || [];
+let doc=await db.collection("proyectos").doc(proyectoActual).get()
+let data=doc.data()
 
-    lista.push({
-        persona,
-        desc,
-        monto,
-        fecha: new Date().toLocaleDateString()
-    });
+let lista=data.gastos||[]
 
-    guardar({gastos:lista});
+lista.push({persona,desc,monto})
 
-    document.getElementById("descGasto").value="";
-    document.getElementById("montoGasto").value="";
+db.collection("proyectos").doc(proyectoActual).update({
+gastos:lista
+})
+
+document.getElementById("descGasto").value=""
+document.getElementById("montoGasto").value=""
 }
-
-
 
 function renderGastos(lista){
 
-    const div = document.getElementById("detalleGastos");
-    div.innerHTML="";
+let div=document.getElementById("listaGastos")
+div.innerHTML=""
 
-    let total = 0;
+let total=0
 
-    lista.forEach((g,i)=>{
+lista.forEach((g,i)=>{
 
-        total += g.monto;
+total+=g.monto
 
-        const row = document.createElement("div");
-        row.className="item";
+let row=document.createElement("div")
+row.className="item"
 
-        row.innerHTML = `
-        <span>${g.desc} → ${formatoPesos(g.monto)}</span>
-        ${admin ? `<div class="delete" onclick="eliminarGasto(${i})">X</div>`:""}
-        `;
+row.innerHTML=`
+<span>${g.desc}</span>
+<span>${formato(g.monto)}</span>
+${admin?`<div class="delete" onclick="eliminarGasto(${i})">x</div>`:""}
+`
 
-        div.appendChild(row);
-    });
+div.appendChild(row)
 
-    document.getElementById("totalGastos").innerText =
-        "Total: " + formatoPesos(total);
+})
+
+document.getElementById("totalGastos").innerText="Total: "+formato(total)
+
 }
-
-
 
 async function eliminarGasto(i){
 
-    const data = await obtener();
-    const lista = data.gastos || [];
+let doc=await db.collection("proyectos").doc(proyectoActual).get()
+let data=doc.data()
 
-    lista.splice(i,1);
+let lista=data.gastos||[]
 
-    guardar({gastos:lista});
+lista.splice(i,1)
+
+db.collection("proyectos").doc(proyectoActual).update({
+gastos:lista
+})
+
 }
 
 
+// ---------- DEUDAS ----------
 
 async function agregarDeuda(){
 
-    if(!admin) return alert("Solo admin");
+if(!admin) return
 
-    const deudor = document.getElementById("deudor").value;
-    const acreedor = document.getElementById("acreedor").value;
-    const monto = Number(document.getElementById("montoDeuda").value);
+let deudor=document.getElementById("deudor").value
+let acreedor=document.getElementById("acreedor").value
+let monto=Number(document.getElementById("montoDeuda").value)
 
-    const data = await obtener();
-    const lista = data.deudas || [];
+let doc=await db.collection("proyectos").doc(proyectoActual).get()
+let data=doc.data()
 
-    lista.push({deudor,acreedor,monto});
+let lista=data.deudas||[]
 
-    guardar({deudas:lista});
+lista.push({deudor,acreedor,monto})
+
+db.collection("proyectos").doc(proyectoActual).update({
+deudas:lista
+})
+
 }
-
-
 
 function renderDeudas(lista){
 
-    const div = document.getElementById("listaDeudas");
-    div.innerHTML="";
+let div=document.getElementById("listaDeudas")
+div.innerHTML=""
 
-    lista.forEach((d,i)=>{
+lista.forEach((d,i)=>{
 
-        const row = document.createElement("div");
-        row.className="item";
+let row=document.createElement("div")
+row.className="item"
 
-        row.innerHTML = `
-        <span>${d.deudor} → ${d.acreedor} ${formatoPesos(d.monto)}</span>
-        ${admin ? `<div class="delete" onclick="eliminarDeuda(${i})">X</div>`:""}
-        `;
+row.innerHTML=`
+<span>${d.deudor} → ${d.acreedor}</span>
+<span>${formato(d.monto)}</span>
+${admin?`<div class="delete" onclick="eliminarDeuda(${i})">x</div>`:""}
+`
 
-        div.appendChild(row);
-    });
+div.appendChild(row)
+
+})
+
 }
-
-
 
 async function eliminarDeuda(i){
 
-    const data = await obtener();
-    const lista = data.deudas || [];
+let doc=await db.collection("proyectos").doc(proyectoActual).get()
+let data=doc.data()
 
-    lista.splice(i,1);
+let lista=data.deudas||[]
 
-    guardar({deudas:lista});
+lista.splice(i,1)
+
+db.collection("proyectos").doc(proyectoActual).update({
+deudas:lista
+})
+
 }
 
 
+// ---------- RANKING ----------
 
-function renderRanking(ingresos, integrantes){
+function renderRanking(ingresos,integrantes){
 
-    const ranking = {};
+let mapa={}
 
-    ingresos.forEach(i=>{
-        ranking[i.nombre] = (ranking[i.nombre] || 0) + i.monto;
-    });
+ingresos.forEach(i=>{
+mapa[i.persona]=(mapa[i.persona]||0)+i.monto
+})
 
-    const lista = Object.entries(ranking)
-        .sort((a,b)=>b[1]-a[1]);
+let lista=Object.entries(mapa).sort((a,b)=>b[1]-a[1])
 
-    const div = document.getElementById("ranking");
-    div.innerHTML="";
+let div=document.getElementById("ranking")
+div.innerHTML=""
 
-    lista.forEach((p,i)=>{
+lista.forEach((p,i)=>{
 
-        const medal =
-            i===0?"🥇":
-            i===1?"🥈":
-            i===2?"🥉":"";
+let medal=i===0?"🥇":i===1?"🥈":i===2?"🥉":""
 
-        const row = document.createElement("div");
-        row.className="item";
+let row=document.createElement("div")
+row.className="item"
 
-        row.innerHTML = `
-        <span>${medal} ${p[0]} → ${formatoPesos(p[1])}</span>
-        `;
+row.innerHTML=`
+<span>${medal} ${p[0]}</span>
+<span>${formato(p[1])}</span>
+`
 
-        div.appendChild(row);
-    });
+div.appendChild(row)
+
+})
+
 }
 
 
+// ---------- WHATSAPP ----------
 
 async function enviarWhatsApp(){
 
-    const data = await obtener();
+let doc=await db.collection("proyectos").doc(proyectoActual).get()
+let data=doc.data()
 
-    const ingresos = data.ingresos || [];
-    const gastos = data.gastos || [];
+let ingresos=data.ingresos||[]
+let gastos=data.gastos||[]
 
-    const totalIng = ingresos.reduce((a,b)=>a+b.monto,0);
-    const totalGas = gastos.reduce((a,b)=>a+b.monto,0);
+let totalIng=ingresos.reduce((a,b)=>a+b.monto,0)
+let totalGas=gastos.reduce((a,b)=>a+b.monto,0)
 
-    const saldo = totalIng - totalGas;
+let saldo=totalIng-totalGas
 
-    let msg =
-`🍻 *Resumen del Parche* 🍻
+let msg=
+`🍻 Gastos del Parche
 
-💰 Ingresos: ${formatoPesos(totalIng)}
-💸 Gastos: ${formatoPesos(totalGas)}
-📊 Saldo: ${formatoPesos(saldo)}
+💰 Ingresos: ${formato(totalIng)}
+💩 Gastos: ${formato(totalGas)}
+📊 Saldo: ${formato(saldo)}
 
-🔥 Seguimos firmes equipo`;
+Proyecto: ${proyectoActual}`
 
-    const url = "https://wa.me/?text=" + encodeURIComponent(msg);
+window.open("https://wa.me/?text="+encodeURIComponent(msg))
 
-    window.open(url,"_blank");
 }
 
 
+// ---------- INIT ----------
 
-cargarDatos();
+cargarProyectos()
